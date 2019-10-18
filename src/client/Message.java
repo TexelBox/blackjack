@@ -1,55 +1,96 @@
 package client;
 
+import java.util.UUID;
+
 /** 
  * A message object lmao this is so unnecessarily complicated
  * @author elvinlimpin
  *
  */
 public class Message {
-	private String log;
-	private String roomID;
-	private String playerID;
-	private String gameAction;
-	private String serverResponse;
+	public enum Verb {
+		GET_ROOMS,
+		AUTHENTICATE,
+		JOIN_ROOM,
+		CREATE_ROOM,
+		START_GAME,
+		SEND_MESSAGE,
+		ACT,
+		BET,
+		GET_HAND,
+		GET_RESULT,
+		
+		FETCH_ARRAY,
+		ERROR,
+	};
+	
+	private Verb verb;
+	private UUID roomID;
+	private String userName;
+	private String body;
+	private int i;
+	private int length;
 	
 	public Message(String protocol) {
-		String[] msg = protocol.split("||");
-		this.log = msg[0];
-		this.roomID = msg[1];
-		this.playerID = msg[2];
-		this.gameAction = msg[3];
-		this.serverResponse = msg[4];
+		String[] msg = protocol.split("<|||>");
+		this.i = Integer.parseInt(msg[0]);
+		this.length = Integer.parseInt(msg[1]);
+		this.verb = Verb.valueOf(msg[2]);
+		this.roomID = UUID.fromString(msg[3]);
+		this.userName = msg[4];
+		this.body = msg[5];
 	}
 
-	public Message(String log, String roomID, String playerID, String gameAction) {
-		this.log = log;
+	public Message(Verb verb, UUID roomID, String userName) {
+		this.verb = verb;
 		this.roomID = roomID;
-		this.playerID = playerID;
-		this.gameAction = gameAction;
-		this.serverResponse = null;
+		this.userName = userName;
+		this.body = null;
+	}	
+
+	public Message(Verb verb, UUID roomID, String userName, String body) {
+		this.verb = verb;
+		this.roomID = roomID;
+		this.userName = userName;
+		this.body = body;
+	}
+	
+	public Message(Message m) {
+		this.verb = Verb.valueOf(m.getVerbAsString());
+		this.roomID = m.getRoomID();
+		this.userName = m.getUserName();
+		this.body = m.getBody();
+	}
+	
+	public int getIndex() {
+		return this.i;
+	}
+	
+	public int getLength() {
+		return this.length;
 	}
 
-	public String getLog() {
-		return log;
+	public String getVerbAsString() {
+		return this.verb.toString();
+	}
+	
+	public boolean ok() {
+		return !this.verb.equals(Verb.ERROR);
 	}
 
-	public String getRoomID() {
+	public UUID getRoomID() {
 		return roomID;
 	}
 
-	public String getPlayerID() {
-		return playerID;
+	public String getUserName() {
+		return userName;
 	}
 
-	public String getAction() {
-		return gameAction;
-	}
-
-	public String getResponse() {
-		return serverResponse;
+	public String getBody() {
+		return body;
 	}
 	
 	public String toOneString() {
-		return this.log + "||" + this.roomID + "||" + this.playerID + "||" + this.gameAction + "||" + this.serverResponse;
+		return this.i + "<|||>" + this.length + "<|||>" + this.verb.toString() + "<|||>" + this.roomID + "<|||>" + this.userName + "<|||>" + this.body;
 	}
 }

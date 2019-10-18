@@ -6,50 +6,50 @@ package server;
  *
  */
 public class Message {
-	private String log;
-	private String roomID;
-	private String playerID;
-	private String gameAction;
-	private String serverResponse;
+	public enum Verb {
+		GET_REQUEST,
+		POST_REQUEST,
+		GET_RESPONSE,
+		POST_RESPONSE,
+	};
+	
+	private Verb verb;
+	private int roomID;
+	private int playerID;
+	private String body;
 	
 	public Message(String protocol) {
 		String[] msg = protocol.split("||");
-		this.log = msg[0];
-		this.roomID = msg[1];
-		this.playerID = msg[2];
-		this.gameAction = msg[3];
-		this.serverResponse = msg[4];
+		this.verb = Verb.valueOf(msg[0]);
+		this.roomID = Integer.parseInt(msg[1]);
+		this.playerID = Integer.parseInt(msg[2]);
+		this.body = msg[3];
 	}
 
-	public Message(String log, String roomID, String playerID, String gameAction) {
-		this.log = log;
+	public Message(Verb verb, int roomID, int playerID, String body) {
+		this.verb = verb;
 		this.roomID = roomID;
 		this.playerID = playerID;
-		this.gameAction = gameAction;
-		this.serverResponse = null;
+		this.body = body;
 	}
 
-	public String getLog() {
-		return log;
+	public String getVerbAsString() {
+		return this.verb.toString();
 	}
 
-	public String getRoomID() {
+	public int getRoomID() {
 		return roomID;
 	}
 
-	public String getPlayerID() {
+	public int getPlayerID() {
 		return playerID;
 	}
 
 	public String getAction() {
-		return gameAction;
-	}
-
-	public String getResponse() {
-		return serverResponse;
+		return body;
 	}
 	
 	public String toOneString() {
-		return this.log + "||" + this.roomID + "||" + this.playerID + "||" + this.gameAction + "||" + this.serverResponse;
+		return this.verb.toString() + "||" + this.roomID + "||" + this.playerID + "||" + this.body;
 	}
 }

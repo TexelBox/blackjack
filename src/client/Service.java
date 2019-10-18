@@ -90,4 +90,13 @@ class Service {
         // Close the socket
         clientSocket.close();           
     } 
+    
+    public Message send(Message m) {
+    	/*
+    	 * 
+    	 * pass this to the back end irl
+    	 */
+    	
+    	return new Message(m);
+    }
 } 
