@@ -9,16 +9,21 @@ import java.util.UUID;
  */
 public class Message {
 	public enum Verb {
-		GET_ROOMS,
+		FETCH_LEADERBOARD,
+		FETCH_ROOMS,
 		AUTHENTICATE,
 		JOIN_ROOM,
 		CREATE_ROOM,
+		QUIT_GAME,
+		
+		SPECTATE,
 		START_GAME,
-		SEND_MESSAGE,
+		TALK,
+		
 		ACT,
 		BET,
-		GET_HAND,
-		GET_RESULT,
+		PROCESS_HAND,
+		PROCESS_BALANCE,
 		
 		FETCH_ARRAY,
 		ERROR,

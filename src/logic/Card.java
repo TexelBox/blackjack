@@ -1,4 +1,4 @@
-package server;
+package logic;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,5 +54,9 @@ public class Card {
 		}
 		Collections.shuffle(deck);
 		return deck;
+	}
+	
+	public String toString() {
+		return suit.toString() + "<|>" + value.toString();
 	}
 }

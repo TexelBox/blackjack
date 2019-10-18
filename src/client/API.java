@@ -17,8 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption; 
 
-class Service {
-    public Service() throws Exception {
+public class API {
+    public API() throws Exception {
 		/**
 		 * Talks to API and instantiates new Room(), returning room
 		 * OR

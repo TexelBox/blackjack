@@ -8,6 +8,8 @@ import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
 
+import client.Message;
+
 /*
  * A simple TCP select server that accepts multiple connections and echo message back to the clients
  * For use in CPSC 441 lectures
@@ -188,4 +190,14 @@ public class API {
                 ((SocketChannel)key.channel()).socket().close();
         }
     }
+
+	public Message getMessage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void respond(Message message) {
+		// TODO Auto-generated method stub
+		
+	}
 }

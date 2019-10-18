@@ -2,6 +2,8 @@ package server;
 
 import java.util.List;
 
+import logic.Turn;
+
 import java.util.ArrayList;
 
 public class Game extends Room {

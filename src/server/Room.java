@@ -3,7 +3,10 @@ package server;
 import java.util.List;
 import java.util.UUID;
 
+import client.Message;
 import client.Player;
+import client.Spectator;
+import logic.Dealer;
 
 import java.util.ArrayList;
 
@@ -13,9 +16,11 @@ public class Room {
 	private static final String INACTIVE = "INACTIVE";
 	
 	protected List<Player> players;
+	protected List<Spectator> spectators;
 	protected String name;
 	private UUID roomID;
 	private boolean isActive;
+	private Dealer dealer;
 	
 	public Room(Player player, String name) {
 		this.players = new ArrayList<Player>();
@@ -46,6 +51,17 @@ public class Room {
 		return new ArrayList<Player>(this.players);
 	}
 	
+	public void addPlayer(Player player) {
+		this.players.add(player);
+	}
+	
+	public void addSpectator(Spectator spectator) {
+		this.spectators.add(spectator);
+	}
+	
+	
+	
+	
 	public String getName() {
 		return this.name;
 	}
@@ -56,6 +72,7 @@ public class Room {
 	
 	public Room activate() {
 		this.isActive = true;
+		this.dealer = new Dealer(this.getRoomID());
 		
 		return new Room(this);
 	}
@@ -66,5 +83,15 @@ public class Room {
 
 	public boolean isActive() {
 		return isActive;
+	}
+
+	public void listen(API service) {
+		Message request = service.getMessage();
+		
+		if(request.getVerbAsString()=="whatever") {
+			this.dealer.deal(); // or whatever
+		}
+		service.respond(new Message("help"));
+		
 	}
 }
