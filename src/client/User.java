@@ -1,6 +1,7 @@
 package client;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,11 +11,17 @@ import server.Room;
 
 public class User {
 	
+	
+	public static int currentPlayerTurn;
 	protected API service;
 	protected String username;
-	private int balance;
+	protected int balance;
 	protected UUID roomID;
-
+	protected int bet;
+	protected LinkedList<Integer> cards = new LinkedList<Integer>();
+	protected static LinkedList<Integer> dealersCards = new LinkedList<Integer>();
+	protected static LinkedList<String> chatbox = new LinkedList<String>();
+	
 	public static void main(String args[]) {
 		
 		User user = new User(); // prompt this
