@@ -1,11 +1,24 @@
 package client;
 
+import java.awt.List;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class Parser {
+	
+//	private ArrayList<String> places = new ArrayList<String>();
+//	places
+	protected static final java.util.List<String> usernames = 
+			Arrays.asList("bob", "bill", "jack", "kane","master","fahim");
+	protected static final java.util.List<String> passwords = 
+			Arrays.asList("passw0rd", "john", "bone", "cage","theKing","brad");
 	protected User p1 = new User();
 	protected User p2 = new User();
 	
-	
+	//To be used only by client
 	//Takes the string to update all players balances
 	//String will look like “P1USERNAME~P1BALANCE;P2USERNAME~P2BALANCE
 	public void playerSet(String input) {
@@ -18,6 +31,7 @@ public class Parser {
 		p2.balance = Integer.parseInt(p2State[1]);
 	}
 	
+	//To be used only by client
 	public void playerBetSet(String input) {
 		String[] playerState = input.split(";");
 		String[] p1State = playerState[0].split("~");
@@ -28,6 +42,8 @@ public class Parser {
 		p2.balance = Integer.parseInt(p2State[1]);
 	
 	}
+	
+	//To be used only by client
 	//Parses the string for each turn
 	public void turnSet(String input) {
 		String[] playerState = input.split(";"); //Split into playerturn dealer p1 p2 and chatbox
@@ -45,6 +61,33 @@ public class Parser {
 		
 	}
 	
+	
+	public boolean authenticate(String input) {
+		String[] loginInfo = input.split(";");
+		if(usernames.contains(loginInfo[0])) {
+			int index = usernames.indexOf(loginInfo[0]);
+			if(passwords.get(index).equals(loginInfo[1])) {
+				return true;
+			}
+		}
+	    return false;
+	}
+	
+	
+	public void actionTaken(String input) {
+		User temp = p2;
+		String[] action = input.split(";");
+		if(p1.username.equals(action[2])) { temp = p1; }
+		
+		if(action[0].equalsIgnoreCase("h")) {
+			temp.cards.add(action[1]);
+		}else if(action[0].equalsIgnoreCase("t")) {
+			User.chatbox.add(action[1]);
+		}else if(action[0].equalsIgnoreCase("d")) {
+			temp.bet *=2;
+		}
+		
+	}
 	//bascaly a tester function 
 	//has format of strings that should be passed in
 	public static void main(String args[]) {
@@ -55,7 +98,10 @@ public class Parser {
 		System.out.println(test.p1.username);
 		test.turnSet("p1;12~S8;10~S3;3~3D;I hate my life");
 		System.out.println(User.chatbox.getFirst());
+		System.out.println(test.authenticate("bob;passw0rd"));
 		
+		test.actionTaken("T; ;p2");
+		System.out.println(test.p2.cards.getLast());
 	}
 	
 }
