@@ -18,8 +18,8 @@ public class User {
 	protected int balance;
 	protected UUID roomID;
 	protected int bet;
-	protected LinkedList<Integer> cards = new LinkedList<Integer>();
-	protected static LinkedList<Integer> dealersCards = new LinkedList<Integer>();
+	protected LinkedList<String> cards = new LinkedList<String>();
+	protected static LinkedList<String> dealersCards = new LinkedList<String>();
 	protected static LinkedList<String> chatbox = new LinkedList<String>();
 	
 	public static void main(String args[]) {
