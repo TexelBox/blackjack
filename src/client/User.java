@@ -12,12 +12,14 @@ import server.Room;
 public class User {
 	
 	
-	public static int currentPlayerTurn;
+	public static String currentPlayerTurn;
 	protected API service;
 	protected String username;
 	protected int balance;
 	protected UUID roomID;
 	protected int bet;
+	protected int score;
+	protected static int dealerScore;
 	protected LinkedList<String> cards = new LinkedList<String>();
 	protected static LinkedList<String> dealersCards = new LinkedList<String>();
 	protected static LinkedList<String> chatbox = new LinkedList<String>();
