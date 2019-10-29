@@ -79,7 +79,7 @@ public class Parser {
 		if(action[0].equalsIgnoreCase("h")) {
 			temp.cards.add(action[1]);
 		}else if(action[0].equalsIgnoreCase("t")) {
-			User.chatbox.add(action[1]);
+			User.chatbox.add(temp.username + ": " + action[1]);
 		}else if(action[0].equalsIgnoreCase("d")) {
 			temp.bet *=2;
 		}
@@ -91,14 +91,14 @@ public class Parser {
 		Parser test = new Parser();
 		test.playerBetSet("20~3000;15~6000");
 		System.out.println(test.p1.balance);
-		test.playerSet("p1~800;p1~670");
+		test.playerSet("jack~800;p2~670");
 		System.out.println(test.p1.username);
-		test.turnSet("p1;12~S8;10~S3;3~3D;I hate my life");
+		test.turnSet("jack;12~S8;10~S3;3~3D;I hate my life");
 		System.out.println(User.chatbox.getFirst());
 		System.out.println(test.p1.bet);
 		
-		test.actionTaken("d;;p1");
-		System.out.println(test.p1.bet);
+		test.actionTaken("T;i hate everyone here;jack");
+		System.out.println(User.chatbox.getLast());
 	}
 	
 }
