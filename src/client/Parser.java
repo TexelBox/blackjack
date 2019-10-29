@@ -1,16 +1,9 @@
 package client;
 
-import java.awt.List;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class Parser {
 	
-//	private ArrayList<String> places = new ArrayList<String>();
-//	places
 	protected static final java.util.List<String> usernames = 
 			Arrays.asList("bob", "bill", "jack", "kane","master","fahim");
 	protected static final java.util.List<String> passwords = 
@@ -31,6 +24,7 @@ public class Parser {
 		p2.balance = Integer.parseInt(p2State[1]);
 	}
 	
+	//sent in from the server
 	//To be used only by client
 	public void playerBetSet(String input) {
 		String[] playerState = input.split(";");
@@ -43,6 +37,8 @@ public class Parser {
 	
 	}
 	
+	
+	//sent in by server
 	//To be used only by client
 	//Parses the string for each turn
 	public void turnSet(String input) {
@@ -61,7 +57,7 @@ public class Parser {
 		
 	}
 	
-	
+	//Takes in username and password and checks if its correct
 	public boolean authenticate(String input) {
 		String[] loginInfo = input.split(";");
 		if(usernames.contains(loginInfo[0])) {
@@ -73,7 +69,8 @@ public class Parser {
 	    return false;
 	}
 	
-	
+	//taken in by the server and changes state on the server side
+	//sent in by the client
 	public void actionTaken(String input) {
 		User temp = p2;
 		String[] action = input.split(";");
@@ -98,10 +95,10 @@ public class Parser {
 		System.out.println(test.p1.username);
 		test.turnSet("p1;12~S8;10~S3;3~3D;I hate my life");
 		System.out.println(User.chatbox.getFirst());
-		System.out.println(test.authenticate("bob;passw0rd"));
+		System.out.println(test.p1.bet);
 		
-		test.actionTaken("T; ;p2");
-		System.out.println(test.p2.cards.getLast());
+		test.actionTaken("d;;p1");
+		System.out.println(test.p1.bet);
 	}
 	
 }
