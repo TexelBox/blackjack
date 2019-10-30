@@ -56,8 +56,8 @@ public class View {
 		String[] chatboxLines = new String[NB_CHATBOX_LINES];
 		Arrays.fill(chatboxLines, "                                                                                                "); //NOTE: i can init the actual arrays like this and then overwrite with linked list entries if they have them
 
-		chatboxLines[0] = getFixedLengthString("LuckyChucky7: one more hit?", NB_CHATBOX_LINE_WIDTH); // example overwrite (later retrive from linked list)
-		chatboxLines[1] = getFixedLengthString("TheBobRoss: why not? remember, there are no mistakes, just happy little accidents!", NB_CHATBOX_LINE_WIDTH);
+		chatboxLines[0] = getFixedLengthString("LuckyChucky7- one more hit?", NB_CHATBOX_LINE_WIDTH); // example overwrite (later retrive from linked list)
+		chatboxLines[1] = getFixedLengthString("TheBobRoss- why not? remember, there are no mistakes, just happy little accidents!", NB_CHATBOX_LINE_WIDTH);
 
 		
 		String[] turns = new String[5];
