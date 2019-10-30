@@ -3,41 +3,11 @@ package client;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
 import java.util.UUID;
 
 import client.Message.Verb;
 import server.Controller.Authentication;
 import server.Room;
-
-class UserInput implements Runnable {
-	
-	protected User user;
-	protected API service;
-	
-	UserInput(User user, API api) {
-		this.user = user;
-		this.service = api;
-	}
-
-	@Override
-	public void run() {
-		Boolean lock = true;
-		Scanner scanner = new Scanner(System.in);
-		System.out.println("Hello world");
-		while(lock) {
-			Message response = this.service.send(new Message(Verb.ACT, null, null, scanner.nextLine()));
-			System.out.println(response.toString());
-			
-			if(response.toString().equals("UNLOCK"))
-				lock = false;
-		}
-		System.out.println("Bye lol");
-		scanner.close();
-	}
-	
-}
-
 public class User {
 	
 	

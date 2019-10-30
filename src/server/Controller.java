@@ -34,23 +34,26 @@ public class Controller {
 		 * 
 		 * intercepts all the commands and deals with it
 		 */
-		
-		Controller c = new Controller();
-		
-		// infinite loop through rooms
-		for(Room room: c.rooms) {
-			room.listen(service);
-		};
-	}
-	
-	public Controller() {
+		System.out.println("IN HERE");
 		try {
-			this.service = new API();
-			this.userDB = null; // fetch from text file or whatever
+			System.out.println("IN HERE2");			
+			Controller c = new Controller();
+			System.out.println("OUT HRE");
+		
+			// infinite loop through rooms
+			service = new API();
+			for(Room room: c.rooms) {
+				room.listen(service);
+			};
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+	}
+	
+	public Controller() {
+		this.userDB = null; // fetch from text file or whatever
 	}
 	
 	public Authentication authenticate(String username, String password) {
