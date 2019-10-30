@@ -28,7 +28,7 @@ public class API {
 		 */
 
         // Initialize a client socket connection to the server
-        Socket clientSocket = new Socket("127.0.0.1", 8080);
+        Socket clientSocket = new Socket("127.0.0.1", 9000);
 
         // Initialize input and an output stream for the connection(s)
 		PrintWriter outBuffer =
@@ -96,6 +96,7 @@ public class API {
     	 * 
     	 * pass this to the back end irl
     	 */
+    	
     	
     	return new Message(m);
     }

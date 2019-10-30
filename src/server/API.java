@@ -37,7 +37,7 @@ public class API {
         CharBuffer cBuffer = null;
         int bytesSent, bytesRecv;     // number of bytes sent or received
         
-        int portNum = 8080;
+        int portNum = 9000;
         
         // Initialize the selector
         Selector selector = Selector.open();
@@ -129,36 +129,7 @@ public class API {
                         			break;
                         			
                         		default:
-                        			if((line.length() > 5) && line.substring(0,4).equals("get ")) {
-                        				String filename = line.substring(4);
-                        				filename = filename.substring(0, filename.length() - 1);
-                        				File thisFile = null;
-                            			for(File file : filesList) {
-                            			    if(file.isFile() && (file.getName().equals(filename))) {
-                            			    	thisFile = file;
-                                    		}
-                            			}
-                        				if(thisFile==null)
-                            				cchannel.write(encoder
-                            						.encode(CharBuffer.wrap("File " + filename + " not found.\n")));
-                        				else {
-                        					String newFileName = filename + "-" + cchannel.socket().getPort();
-                        					byte[] fileInBytes  = new byte [(int)thisFile.length()];
-                        					BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(thisFile));
-                        					bufferedInputStream.read(fileInBytes, 0, fileInBytes.length);
-                        					ByteBuffer fileByteBuffer = ByteBuffer.wrap(fileInBytes);
-                        					
-                            				cchannel.write(encoder.encode(CharBuffer.wrap("<<File begin>>\n")));
-                            				cchannel.write(encoder.encode(CharBuffer.wrap(newFileName + "\n")));
-                            				cchannel.write(fileByteBuffer);
-                        					
-                        					cchannel.write(encoder.encode(CharBuffer
-                        							.wrap("\n<<File end>>\nFile saved in "+ newFileName + " (" + thisFile.length() + "bytes)\n")));
-                        					bufferedInputStream.close();
-                        				}
-                        			} else {
-                        				cchannel.write(encoder.encode(CharBuffer.wrap("Unknown Command: " + line)));
-                        			}
+                        			cchannel.write(encoder.encode(CharBuffer.wrap("Unknown Command: " + line)));
                         	}
                                 
                             // Echo the message back

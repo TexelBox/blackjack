@@ -3,11 +3,40 @@ package client;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.UUID;
 
 import client.Message.Verb;
 import server.Controller.Authentication;
 import server.Room;
+
+class UserInput implements Runnable {
+	
+	protected User user;
+	protected API service;
+	
+	UserInput(User user, API api) {
+		this.user = user;
+		this.service = api;
+	}
+
+	@Override
+	public void run() {
+		Boolean lock = true;
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("Hello world");
+		while(lock) {
+			Message response = this.service.send(new Message(Verb.ACT, null, null, scanner.nextLine()));
+			System.out.println(response.toString());
+			
+			if(response.toString().equals("UNLOCK"))
+				lock = false;
+		}
+		System.out.println("Bye lol");
+		scanner.close();
+	}
+	
+}
 
 public class User {
 	
@@ -23,19 +52,30 @@ public class User {
 	protected LinkedList<String> cards = new LinkedList<String>();
 	protected static LinkedList<String> dealersCards = new LinkedList<String>();
 	protected static LinkedList<String> chatbox = new LinkedList<String>();
-	
+
 	public static void main(String args[]) {
-		
-		User user = new User(); // prompt this
-	}
-	
-	public User() {
+		API api = null;
 		try {
-			this.service = new API();
+			api = new API();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		Thread userInput = new Thread(new UserInput(new User(api), api));
+		userInput.start();		
+	}
+	
+	public User(API api) {
+		this.service = api;
+		
+		// recieve the output stuff here
+	}
+	
+	public User() {
+		this.service = null;
+		
+		// shell user
 	}
 	
 	public String getUsername() {

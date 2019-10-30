@@ -27,6 +27,7 @@ public class Message {
 		
 		FETCH_ARRAY,
 		ERROR,
+		TEST,
 	};
 	
 	private Verb verb;
@@ -95,7 +96,7 @@ public class Message {
 		return body;
 	}
 	
-	public String toOneString() {
+	public String toString() {
 		return this.i + "<|||>" + this.length + "<|||>" + this.verb.toString() + "<|||>" + this.roomID + "<|||>" + this.userName + "<|||>" + this.body;
 	}
 }

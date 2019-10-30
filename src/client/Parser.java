@@ -13,7 +13,7 @@ public class Parser {
 	
 	//To be used only by client
 	//Takes the string to update all players balances
-	//String will look like “P1USERNAME~P1BALANCE;P2USERNAME~P2BALANCE
+	//String will look like *P1USERNAME~P1BALANCE;P2USERNAME~P2BALANCE
 	public void playerSet(String input) {
 		String[] playerState = input.split(";");
 		String[] p1State = playerState[0].split("~");
