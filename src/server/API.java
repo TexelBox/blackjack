@@ -116,20 +116,10 @@ public class API {
                         			terminated = true;
                         			System.out.println("terminating");
                         			break;
-                    			
-                        		case "list\n":
-                        			cchannel.write(encoder.encode(CharBuffer.wrap("<<List begin>>\n")));
-                        			
-                        			for(File file : filesList) {
-                        			    if(file.isFile()) {
-                                			cchannel.write(encoder.encode(CharBuffer.wrap(file.getName() + "\n")));
-                                		}
-                        			}
-                        			cchannel.write(encoder.encode(CharBuffer.wrap("<<List end>>\n")));
-                        			break;
-                        			
-                        		default:
-                        			cchannel.write(encoder.encode(CharBuffer.wrap("Unknown Command: " + line)));
+
+                                default:
+                                    // parse into a message
+                        			cchannel.write(encoder.encode(CharBuffer.wrap("You said: " + line)));
                         	}
                                 
                             // Echo the message back
@@ -161,14 +151,4 @@ public class API {
                 ((SocketChannel)key.channel()).socket().close();
         }
     }
-
-	public Message getMessage() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void respond(Message message) {
-		// TODO Auto-generated method stub
-		
-	}
 }
