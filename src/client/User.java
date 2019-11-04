@@ -5,7 +5,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Timer;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +21,6 @@ public class User implements Runnable {
 	protected API service;
 	public String username = null; // must be init when new player joins table (NOTE: null will crash UI to inidicate you dun goofed)
 	public int balance = -1; // must be init when new player joins table (NOTE: -1 will not crash UI, but a visual balance of -1 will show up to also indicate you dun goofed)
-	protected UUID roomID;
 	public int bet = -1; // -1 means blank, will be init after betting window
 	public int score = -1; // -1 means blank, will be init after hands delt and update on new cards received
 	public static int dealerScore = -1; // -1 means blank, 0 means ?? (hidden)
@@ -48,44 +46,47 @@ public class User implements Runnable {
 				System.out.print(View.UI_ENTER_USERNAME);
 				arg1 = scan.nextLine();
 				
-				System.out.println(View.UI_ENTER_PASSWORD);
+				System.out.print(View.UI_ENTER_PASSWORD);
 				arg2 = scan.nextLine();
 
-				if(arg1.contains(":")||arg2.contains(":")) {
+				if(arg1.contains(";")||arg2.contains(";")) {
 					System.out.print(View.UI_SANTIZATION_ERROR);
 				} else {
 					Message m = service.sendAndWait(new Message(arg1, arg2));
 					if(m.ok()) {
 						username = arg1;
 						System.out.println("Welcome " + username);
+					} else {
+						if(m.toString().equals("full"))
+							System.out.print(View.UI_FULL_ERROR);
+						else
+							System.out.print(View.UI_AUTH_ERROR);
 					}
-					else System.out.println("Invalid user");
 				}
 			}
-			// join game prompt
-			// System.out.println("Join the game or spectate?");
-			// arg1 = scan.nextLine(); // blocks
-			// service.send(new Message(arg1));
 
 			// fix balance
 			Executors
 				.newSingleThreadScheduledExecutor()
-				.scheduleAtFixedRate(new User(service, username, 0), 0, 100, TimeUnit.MILLISECONDS);
+				.scheduleAtFixedRate(new User(service, username, 0), 0, 50, TimeUnit.MILLISECONDS);
 						
 			// get input
 			System.out.print(View.UI_COMMAND_INFO);
 			System.out.print(View.UI_ENTER_COMMAND);
 
 			while(scan.hasNextLine()) {
-				System.out.print(View.UI_ENTER_COMMAND);
 				String nextLine = scan.nextLine();
-
 				//sanitization
-				if(nextLine.contains(":")) {
+				if(nextLine.contains(";")) {
 					System.out.print(View.UI_SANTIZATION_ERROR);
 				}
 
-				switch(nextLine.substring(0,3)) {
+				if(nextLine.length() == 0) {
+
+				} else if(nextLine.length() < 3) {
+					System.out.print(View.UI_COMMAND_ERROR);
+					System.out.print(View.UI_COMMAND_INFO);
+				} else switch(nextLine.substring(0,3)) {
 					case "/b ":
 						if(!nextLine.substring(4).matches("\\d+(\\d+)?")) {
 							System.out.print(View.UI_BET_ERROR);
@@ -102,9 +103,11 @@ public class User implements Runnable {
 						break;
 
 					default:
+						System.out.print(View.UI_COMMAND_ERROR);
 						System.out.print(View.UI_COMMAND_INFO);
 
 				}
+				System.out.print(View.UI_ENTER_COMMAND);
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -114,14 +117,14 @@ public class User implements Runnable {
 
 	//NOTE: only this constructor should be used when initializing a new player at the table (after join commands processed)
 	// all other fields will get updated in their initialization windows (betting, cards delt, game turns, etc.)
-	User(API service, String username, int balance) {
+	protected User(API service, String username, int balance) {
 		this.service = service;
 		this.username = username;
 		this.balance = balance;
 	}
 
 	// test user
-	User(String username, int balance) {
+	public User(String username, int balance) {
 		this.service = null;
 		this.username = username;
 		this.balance = balance;

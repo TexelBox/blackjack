@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import client.View;
+
 /*
  * A simple TCP select server that accepts multiple connections and echo message back to the clients
  * For use in CPSC 441 lectures
@@ -34,8 +36,10 @@ public class API {
     public static int BUFFERSIZE = 32;
     public static int TIMEOUT_LENGTH = 200;
     public static List<Socket> gui = new ArrayList<Socket>();
+    public Parser parser;
     
     public API() throws Exception {
+        this.parser = new Parser();
         System.out.println("Welcome to blackjack");
 
         // Initialize buffers and coders for channel receive and send
@@ -128,18 +132,10 @@ public class API {
                                     if(!gui.contains(socket))
                                         gui.add(socket); // bind
                                     
-                                    socket.getChannel().write(encoder.encode(CharBuffer.wrap("GAMEBOARD HERE")));
+                                    socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
                                     break;
 
                                 default:
-                                    String response = "ok";
-                                    System.out.println("Response: " + response);
-
-                                    // player updates
-                                    cchannel.write(encoder.encode(CharBuffer.wrap(response + "\n")));
-                                    
-                                    // gui updates
-                                    System.out.println("GUI "+ line.substring(3));
                                     switch(line.substring(0, 3)) {
                                         case "/t ":
                                             for(Socket guiSocket: gui) {
@@ -147,6 +143,14 @@ public class API {
                                             }
                                             break;
 
+                                        case "/a ":
+                                            if(this.parser.authenticate(line.substring(3))) {
+                                                if(this.parser.setUser(line.substring(3))==-1)
+                                                    cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
+                                                else
+                                                    cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+                                            } else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
+                                            
                                         case "/b ":
                                         case "/h ":
                                         case "/s ":
@@ -156,11 +160,13 @@ public class API {
                                             // action happens
                                             // logic goes here
                                         
+                                        // make sure everything gets processed beforehand here
                                         default:
+                                           
+                                        String UIState = View.getStateUI(this.parser);
                                             for(Socket guiSocket: gui) {
-                                                guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("HELLO WORLD" + "\n")));
+                                                guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n")));
                                             }
-
                                     }
                         	}
                                 

@@ -13,14 +13,15 @@ public class Message {
 	private String message = "";
 
 	public Message(String protocol) {
+		message = protocol;
+		
 		switch(protocol) {
 			case "ok":
-				message = protocol;
 				okFlag = true;
 				break;
+
 			default:
-				// talk
-				message = protocol;
+				okFlag = false;
 		}
 	}
 
@@ -36,7 +37,7 @@ public class Message {
 
 	public String toString() {
 		if(!this.password.equals("")) {
-			return this.username + ":" + this.password;
+			return this.username + ";" + this.password;
 		} else if(!this.message.equals("")) {
 			return this.message;
 		}

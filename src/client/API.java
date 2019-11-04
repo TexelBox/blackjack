@@ -47,7 +47,7 @@ public class API {
 	}
 	
 	public Message sendAndWait(Message m) {
-		outBuffer.println(m.toString());
+		outBuffer.println("/a " + m.toString());
 		try {
 			return new Message(inBuffer.readLine());
 		} catch (IOException e) {
