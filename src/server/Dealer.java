@@ -1,25 +1,27 @@
-package logic;
+package server;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
-import client.User;
-import client.Player.Action;
-import server.Controller;
 
 /**
  * Internal logic of black jack dealer. Interfaces with player
  * @author elvinlimpin
  *
  */
+
+
 public class Dealer {
-	private UUID roomID;
 	private List<Turn> turns;
 	private List<ActionBuffer> actions;
 	
-	public Dealer(UUID roomID) {
-		this.roomID = roomID;
+	public enum Action {
+		DOUBLE,
+		HIT,
+		STAY,
+	}
+
+	public Dealer() {
+		
 	}
 	
 	// step 1
@@ -35,17 +37,17 @@ public class Dealer {
 		// what should this actually do? Change their hand right?
 		
 		if(Action.DOUBLE.equals(action)) {
-			ActionBuffer pr = new ActionBuffer(username, roomID, action);
+			ActionBuffer pr = new ActionBuffer(username, action);
 			actions.add(pr);
 			return pr;
 			
 		} else if(Action.HIT.equals(action)) {
-			ActionBuffer pr = new ActionBuffer(username, roomID, action);
+			ActionBuffer pr = new ActionBuffer(username, action);
 			actions.add(pr);
 			return pr;
 			
 		} else {
-			ActionBuffer pr = new ActionBuffer(username, roomID, action);
+			ActionBuffer pr = new ActionBuffer(username, action);
 			actions.add(pr);
 			return pr;
 			
@@ -73,9 +75,5 @@ public class Dealer {
 		
 		this.actions = null;
 		return turn;
-	}
-
-	public UUID getRoomID() {
-		return roomID;
 	}
 }

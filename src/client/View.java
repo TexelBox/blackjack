@@ -1,8 +1,8 @@
 package client;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
+import server.Parser;
 
 public class View {
 
@@ -22,8 +22,13 @@ public class View {
 	public static final String UI_COMMAND_INFO = 
 											  "COMMON COMMANDS: /t(alk) <msg>\n"
 											+ "PLAYER COMMANDS: /b(et) <value>, /s(tand), /h(it), /d(ouble)\n"
-											+ "SPECTATOR COMMANDS: /j(oin), /q(uit)";
+											+ "SPECTATOR COMMANDS: /j(oin), /q(uit)\n";
 	public static final String UI_ENTER_COMMAND = "Enter command: ";
+	public static final String UI_SANTIZATION_ERROR = "Please do not enter any special characters.\n";
+	public static final String UI_BET_ERROR = "Please enter a numeric value after your bet. No decimals.\n";
+	public static final String UI_AUTH_ERROR = "Invalid credentials.\n";
+	public static final String UI_FULL_ERROR = "No more room for players.\n";
+	public static final String UI_COMMAND_ERROR = "\n\nPlease enter one of the following commands:\n";
 
 	public static final int NB_CHATBOX_LINES = 24;
 	public static final int NB_CHATBOX_LINE_WIDTH = 96;
@@ -38,7 +43,11 @@ public class View {
 
 	// returns the filled in template string for the side-by-side view of game + chat
 	// the params are in order that they would appear on table
-	public static String getStateUI(User p4, User p3, User p2, User p1) {
+	public static String getStateUI(Parser parser) {
+		User p0 = parser.getUsers().get(0);
+		User p1 = parser.getUsers().get(1);
+		User p2 = parser.getUsers().get(2);
+		User p3 = parser.getUsers().get(3);
 
 		//NOTE: this can be optimized in the future if needed
 		//NOTE: i'm assuming that if a user is not null then none of their fields will be null...
@@ -71,10 +80,10 @@ public class View {
 		// overwrite...
 		// assuming a value of -1 means blank and 0 means ?? (hidden, - only applies to dealer's hole card)
 		if (-1 != User.dealerScore) scores[0] = (0 == User.dealerScore) ? "??" : getFixedLengthString(String.valueOf(User.dealerScore), NB_SCORE_FIELD_SIZE);
-		if (null != p1 && -1 != p1.score) scores[1] = getFixedLengthString(String.valueOf(p1.score), NB_SCORE_FIELD_SIZE);
-		if (null != p2 && -1 != p2.score) scores[2] = getFixedLengthString(String.valueOf(p2.score), NB_SCORE_FIELD_SIZE);
-		if (null != p3 && -1 != p3.score) scores[3] = getFixedLengthString(String.valueOf(p3.score), NB_SCORE_FIELD_SIZE);
-		if (null != p4 && -1 != p4.score) scores[4] = getFixedLengthString(String.valueOf(p4.score), NB_SCORE_FIELD_SIZE);
+		if (null != p0 && -1 != p0.score) scores[1] = getFixedLengthString(String.valueOf(p0.score), NB_SCORE_FIELD_SIZE);
+		if (null != p1 && -1 != p1.score) scores[2] = getFixedLengthString(String.valueOf(p1.score), NB_SCORE_FIELD_SIZE);
+		if (null != p2 && -1 != p2.score) scores[3] = getFixedLengthString(String.valueOf(p2.score), NB_SCORE_FIELD_SIZE);
+		if (null != p3 && -1 != p3.score) scores[4] = getFixedLengthString(String.valueOf(p3.score), NB_SCORE_FIELD_SIZE);
 
 		// 4. bets...
 
@@ -83,10 +92,10 @@ public class View {
 		Arrays.fill(bets, "    ");
 		// overwrite...
 		// assuming a value of -1 means blank
-		if (null != p1 && -1 != p1.bet) bets[0] = getFixedLengthString("$" + String.valueOf(p1.bet), NB_BET_FIELD_SIZE);
-		if (null != p2 && -1 != p2.bet) bets[1] = getFixedLengthString("$" + String.valueOf(p2.bet), NB_BET_FIELD_SIZE);
-		if (null != p3 && -1 != p3.bet) bets[2] = getFixedLengthString("$" + String.valueOf(p3.bet), NB_BET_FIELD_SIZE);
-		if (null != p4 && -1 != p4.bet) bets[3] = getFixedLengthString("$" + String.valueOf(p4.bet), NB_BET_FIELD_SIZE);
+		if (null != p0 && -1 != p0.bet) bets[0] = getFixedLengthString("$" + String.valueOf(p0.bet), NB_BET_FIELD_SIZE);
+		if (null != p1 && -1 != p1.bet) bets[1] = getFixedLengthString("$" + String.valueOf(p1.bet), NB_BET_FIELD_SIZE);
+		if (null != p2 && -1 != p2.bet) bets[2] = getFixedLengthString("$" + String.valueOf(p2.bet), NB_BET_FIELD_SIZE);
+		if (null != p3 && -1 != p3.bet) bets[3] = getFixedLengthString("$" + String.valueOf(p3.bet), NB_BET_FIELD_SIZE);
 
 		// 5. cards...
 
@@ -115,12 +124,12 @@ public class View {
 		}
 
 		// P1's cards...
-		if (null != p1) {
+		if (null != p0) {
 			row = 0;
 			col = 0;
-			for (int i = 0; i < p1.cards.size(); ++i) {
-				cards[1][row][col] = "|" + p1.cards.get(i).charAt(0) + "|";
-				cards[1][row+1][col] = "|" + p1.cards.get(i).charAt(1) + "|";
+			for (int i = 0; i < p0.cards.size(); ++i) {
+				cards[1][row][col] = "|" + p0.cards.get(i).charAt(0) + "|";
+				cards[1][row+1][col] = "|" + p0.cards.get(i).charAt(1) + "|";
 				
 				++col;
 				if (col >= 4) {
@@ -131,12 +140,12 @@ public class View {
 		}
 
 		// P2's cards...
-		if (null != p2) {
+		if (null != p1) {
 			row = 0;
 			col = 0;
-			for (int i = 0; i < p2.cards.size(); ++i) {
-				cards[2][row][col] = "|" + p2.cards.get(i).charAt(0) + "|";
-				cards[2][row+1][col] = "|" + p2.cards.get(i).charAt(1) + "|";
+			for (int i = 0; i < p1.cards.size(); ++i) {
+				cards[2][row][col] = "|" + p1.cards.get(i).charAt(0) + "|";
+				cards[2][row+1][col] = "|" + p1.cards.get(i).charAt(1) + "|";
 				
 				++col;
 				if (col >= 4) {
@@ -147,12 +156,12 @@ public class View {
 		}
 
 		// P3's cards...
-		if (null != p3) {
+		if (null != p2) {
 			row = 0;
 			col = 0;
-			for (int i = 0; i < p3.cards.size(); ++i) {
-				cards[3][row][col] = "|" + p3.cards.get(i).charAt(0) + "|";
-				cards[3][row+1][col] = "|" + p3.cards.get(i).charAt(1) + "|";
+			for (int i = 0; i < p2.cards.size(); ++i) {
+				cards[3][row][col] = "|" + p2.cards.get(i).charAt(0) + "|";
+				cards[3][row+1][col] = "|" + p2.cards.get(i).charAt(1) + "|";
 				
 				++col;
 				if (col >= 4) {
@@ -163,12 +172,12 @@ public class View {
 		}
 
 		// P4's cards...
-		if (null != p4) {
+		if (null != p3) {
 			row = 0;
 			col = 0;
-			for (int i = 0; i < p4.cards.size(); ++i) {
-				cards[4][row][col] = "|" + p4.cards.get(i).charAt(0) + "|";
-				cards[4][row+1][col] = "|" + p4.cards.get(i).charAt(1) + "|";
+			for (int i = 0; i < p3.cards.size(); ++i) {
+				cards[4][row][col] = "|" + p3.cards.get(i).charAt(0) + "|";
+				cards[4][row+1][col] = "|" + p3.cards.get(i).charAt(1) + "|";
 				
 				++col;
 				if (col >= 4) {
@@ -184,10 +193,10 @@ public class View {
 		String[] usernames = new String[4];
 		Arrays.fill(usernames, "~VACANT~    "); //NOTE: ~ is used here since this is special character that will never show up in an actual username, so no one can have ~VACANT~ as a username and this never gets passed across the network so its fine
 		// overwrite...
-		if (null != p1) usernames[0] = getFixedLengthString(p1.username, NB_USERNAME_CHAR_LIMIT);
-		if (null != p2) usernames[1] = getFixedLengthString(p2.username, NB_USERNAME_CHAR_LIMIT);
-		if (null != p3) usernames[2] = getFixedLengthString(p3.username, NB_USERNAME_CHAR_LIMIT);
-		if (null != p4) usernames[3] = getFixedLengthString(p4.username, NB_USERNAME_CHAR_LIMIT);
+		if (null != p0) usernames[0] = getFixedLengthString(p0.username, NB_USERNAME_CHAR_LIMIT);
+		if (null != p1) usernames[1] = getFixedLengthString(p1.username, NB_USERNAME_CHAR_LIMIT);
+		if (null != p2) usernames[2] = getFixedLengthString(p2.username, NB_USERNAME_CHAR_LIMIT);
+		if (null != p3) usernames[3] = getFixedLengthString(p3.username, NB_USERNAME_CHAR_LIMIT);
 
 		// 7. balances...
 
@@ -196,40 +205,40 @@ public class View {
 		Arrays.fill(balances, "        ");
 		// overwrite...
 		// assuming that the balances have already been clamped between 0 (or 1?) and 9999999
-		if (null != p1) balances[0] = getFixedLengthString("$" + String.valueOf(p1.balance), NB_BALANCE_FIELD_SIZE);
-		if (null != p2) balances[1] = getFixedLengthString("$" + String.valueOf(p2.balance), NB_BALANCE_FIELD_SIZE);
-		if (null != p3) balances[2] = getFixedLengthString("$" + String.valueOf(p3.balance), NB_BALANCE_FIELD_SIZE);
-		if (null != p4) balances[3] = getFixedLengthString("$" + String.valueOf(p4.balance), NB_BALANCE_FIELD_SIZE);
+		if (null != p0) balances[0] = getFixedLengthString("$" + String.valueOf(p0.balance), NB_BALANCE_FIELD_SIZE);
+		if (null != p1) balances[1] = getFixedLengthString("$" + String.valueOf(p1.balance), NB_BALANCE_FIELD_SIZE);
+		if (null != p2) balances[2] = getFixedLengthString("$" + String.valueOf(p2.balance), NB_BALANCE_FIELD_SIZE);
+		if (null != p3) balances[3] = getFixedLengthString("$" + String.valueOf(p3.balance), NB_BALANCE_FIELD_SIZE);
 
 
 		//NOTE: wow, it's ugly...
 		String ui =
-          "|==============================================================================||================================================================================================|\n"
-        + "|                                    "+turns[0]+"                                    ||"+chatboxLines[0]+"|\n"
-        + "|                                    DEALER                                    ||"+chatboxLines[1]+"|\n"
-        + "|                                   SCORE:"+scores[0]+"                                   ||"+chatboxLines[2]+"|\n"
-        + "|                                 "+cards[0][0][0]+cards[0][0][1]+cards[0][0][2]+cards[0][0][3]+"                                 ||"+chatboxLines[3]+"|\n"
-        + "|                                 "+cards[0][1][0]+cards[0][1][1]+cards[0][1][2]+cards[0][1][3]+"                                 ||"+chatboxLines[4]+"|\n"
-        + "|                                 "+cards[0][2][0]+cards[0][2][1]+cards[0][2][2]+cards[0][2][3]+"                                 ||"+chatboxLines[5]+"|\n"
-        + "|                                 "+cards[0][3][0]+cards[0][3][1]+cards[0][3][2]+cards[0][3][3]+"                                 ||"+chatboxLines[6]+"|\n"
-        + "|                                                                              ||"+chatboxLines[7]+"|\n"
-        + "|                                                                              ||"+chatboxLines[8]+"|\n"
-        + "|                                                                              ||"+chatboxLines[9]+"|\n"
-        + "|         "+turns[4]+"            "+turns[3]+"            "+turns[2]+"            "+turns[1]+"         ||"+chatboxLines[10]+"|\n"
-        + "|        BET:"+bets[3]+"          BET:"+bets[2]+"          BET:"+bets[1]+"          BET:"+bets[0]+"        ||"+chatboxLines[11]+"|\n"
-        + "|                                                                              ||"+chatboxLines[12]+"|\n"
-        + "|        SCORE:"+scores[4]+"          SCORE:"+scores[3]+"          SCORE:"+scores[2]+"          SCORE:"+scores[1]+"        ||"+chatboxLines[13]+"|\n"
-        + "|      "+cards[4][0][0]+cards[4][0][1]+cards[4][0][2]+cards[4][0][3]+"      "+cards[3][0][0]+cards[3][0][1]+cards[3][0][2]+cards[3][0][3]+"      "+cards[2][0][0]+cards[2][0][1]+cards[2][0][2]+cards[2][0][3]+"      "+cards[1][0][0]+cards[1][0][1]+cards[1][0][2]+cards[1][0][3]+"      ||"+chatboxLines[14]+"|\n"
-        + "|      "+cards[4][1][0]+cards[4][1][1]+cards[4][1][2]+cards[4][1][3]+"      "+cards[3][1][0]+cards[3][1][1]+cards[3][1][2]+cards[3][1][3]+"      "+cards[2][1][0]+cards[2][1][1]+cards[2][1][2]+cards[2][1][3]+"      "+cards[1][1][0]+cards[1][1][1]+cards[1][1][2]+cards[1][1][3]+"      ||"+chatboxLines[15]+"|\n"
-        + "|      "+cards[4][2][0]+cards[4][2][1]+cards[4][2][2]+cards[4][2][3]+"      "+cards[3][2][0]+cards[3][2][1]+cards[3][2][2]+cards[3][2][3]+"      "+cards[2][2][0]+cards[2][2][1]+cards[2][2][2]+cards[2][2][3]+"      "+cards[1][2][0]+cards[1][2][1]+cards[1][2][2]+cards[1][2][3]+"      ||"+chatboxLines[16]+"|\n"
-        + "|      "+cards[4][3][0]+cards[4][3][1]+cards[4][3][2]+cards[4][3][3]+"      "+cards[3][3][0]+cards[3][3][1]+cards[3][3][2]+cards[3][3][3]+"      "+cards[2][3][0]+cards[2][3][1]+cards[2][3][2]+cards[2][3][3]+"      "+cards[1][3][0]+cards[1][3][1]+cards[1][3][2]+cards[1][3][3]+"      ||"+chatboxLines[17]+"|\n"
-        + "|                                                                              ||"+chatboxLines[18]+"|\n"
-        + "|                                                                              ||"+chatboxLines[19]+"|\n"
-        + "|                                                                              ||"+chatboxLines[20]+"|\n"
-        + "|      "+usernames[3]+"      "+usernames[2]+"      "+usernames[1]+"      "+usernames[0]+"      ||"+chatboxLines[21]+"|\n"
-        + "|      BAL:"+balances[3]+"      BAL:"+balances[2]+"      BAL:"+balances[1]+"      BAL:"+balances[0]+"      ||"+chatboxLines[22]+"|\n"
-        + "|                                                                              ||"+chatboxLines[23]+"|\n"
-        + "|==============================================================================||================================================================================================|";
+          "|==============================================================================||;"
+        + "|                                    "+turns[0]+"                                    ||;"
+        + "|                                    DEALER                                    ||;"
+        + "|                                   SCORE:"+scores[0]+"                                   ||;"
+        + "|                                 "+cards[0][0][0]+cards[0][0][1]+cards[0][0][2]+cards[0][0][3]+"                                 ||;"
+        + "|                                 "+cards[0][1][0]+cards[0][1][1]+cards[0][1][2]+cards[0][1][3]+"                                 ||;"
+        + "|                                 "+cards[0][2][0]+cards[0][2][1]+cards[0][2][2]+cards[0][2][3]+"                                 ||;"
+        + "|                                 "+cards[0][3][0]+cards[0][3][1]+cards[0][3][2]+cards[0][3][3]+"                                 ||;"
+        + "|                                                                              ||;"
+        + "|                                                                              ||;"
+        + "|                                                                              ||;"
+        + "|         "+turns[4]+"            "+turns[3]+"            "+turns[2]+"            "+turns[1]+"         ||;"
+        + "|        BET:"+bets[3]+"          BET:"+bets[2]+"          BET:"+bets[1]+"          BET:"+bets[0]+"        ||;"
+        + "|                                                                              |;"
+        + "|        SCORE:"+scores[4]+"          SCORE:"+scores[3]+"          SCORE:"+scores[2]+"          SCORE:"+scores[1]+"        ||;"
+        + "|      "+cards[4][0][0]+cards[4][0][1]+cards[4][0][2]+cards[4][0][3]+"      "+cards[3][0][0]+cards[3][0][1]+cards[3][0][2]+cards[3][0][3]+"      "+cards[2][0][0]+cards[2][0][1]+cards[2][0][2]+cards[2][0][3]+"      "+cards[1][0][0]+cards[1][0][1]+cards[1][0][2]+cards[1][0][3]+"      ||;"
+        + "|      "+cards[4][1][0]+cards[4][1][1]+cards[4][1][2]+cards[4][1][3]+"      "+cards[3][1][0]+cards[3][1][1]+cards[3][1][2]+cards[3][1][3]+"      "+cards[2][1][0]+cards[2][1][1]+cards[2][1][2]+cards[2][1][3]+"      "+cards[1][1][0]+cards[1][1][1]+cards[1][1][2]+cards[1][1][3]+"      ||;"
+        + "|      "+cards[4][2][0]+cards[4][2][1]+cards[4][2][2]+cards[4][2][3]+"      "+cards[3][2][0]+cards[3][2][1]+cards[3][2][2]+cards[3][2][3]+"      "+cards[2][2][0]+cards[2][2][1]+cards[2][2][2]+cards[2][2][3]+"      "+cards[1][2][0]+cards[1][2][1]+cards[1][2][2]+cards[1][2][3]+"      ||;"
+        + "|      "+cards[4][3][0]+cards[4][3][1]+cards[4][3][2]+cards[4][3][3]+"      "+cards[3][3][0]+cards[3][3][1]+cards[3][3][2]+cards[3][3][3]+"      "+cards[2][3][0]+cards[2][3][1]+cards[2][3][2]+cards[2][3][3]+"      "+cards[1][3][0]+cards[1][3][1]+cards[1][3][2]+cards[1][3][3]+"      ||;"
+        + "|                                                                              ||;"
+        + "|                                                                              ||;"
+        + "|                                                                              ||;"
+        + "|      "+usernames[3]+"      "+usernames[2]+"      "+usernames[1]+"      "+usernames[0]+"      ||;"
+        + "|      BAL:"+balances[3]+"      BAL:"+balances[2]+"      BAL:"+balances[1]+"      BAL:"+balances[0]+"      ||;"
+        + "|                                                                              ||;"
+        + "|==============================================================================||";
 		
 		return ui;
 	}
@@ -240,19 +249,6 @@ public class View {
 
 		return String.format("%-"+length+"."+length+"s", original);
 	}
-	
-	
-
-	//UNUSED?...
-	public static void log() {
-		// chat stuff
-	}
-	
-	public static void action() {
-		// deal with action
-	}
-
-
 
 	// for testing only...
 	public static void main(String[] args) {
@@ -269,7 +265,7 @@ public class View {
 
 	// dealer waiting for new round...
 	private static void printIDLE() {
-		System.out.println(getStateUI(null, null, null, null));
+		System.out.println(getStateUI(new Parser(null, null, null, null)));
 	}
 	
 	// 3 people have issued join commands...
@@ -278,7 +274,7 @@ public class View {
 		User p1 = new User("LuckyChucky7", 314);
 		User p3 = new User("XGAMBLERx", 1);
 		User p4 = new User("JOHN123", 9999999);
-		System.out.println(getStateUI(p4, p3, null, p1));
+		System.out.println(getStateUI(new Parser(p4, p3, null, p1)));
 	}
 
 	// all bets are in...
@@ -315,7 +311,7 @@ public class View {
 		// turn also goes to p1
 		User.currentPlayerTurn = "1";
 
-		System.out.println(getStateUI(p4, p3, null, p1));
+		System.out.println(getStateUI(new Parser(p4, p3, null, p1)));
 	}
 
 	// 1 more hit by p1...
@@ -355,7 +351,7 @@ public class View {
 		p1.cards.add("2D");
 		p1.score += 2;
 
-		System.out.println(getStateUI(p4, p3, null, p1));
+		System.out.println(getStateUI(new Parser(p4, p3, null, p1)));
 	}
 
 	// (fast-forward 2 decisions) 2 more hits by p1...
@@ -366,7 +362,7 @@ public class View {
 		// assuming client sides already error checked these numbers and this is the state updates sent back by server
 		p1.bet = 42;
 		p1.balance -= p1.bet;
-		p3.bet = 1;
+		p3.bet = 1; 
 		//p3.balance -= p3.bet; //NOTE: I don't do this cause they'd get to a balance of 0, which we should clamp to a min of $1 so people don't get locked out of play
 		p4.bet = 100;
 		p4.balance -= p4.bet;
@@ -403,7 +399,7 @@ public class View {
 		p1.score += 4; // this would bust so...
 		p1.score -= 10; // now we treat 2nd ace as a value of 1 (11-1 = 10)
 
-		System.out.println(getStateUI(p4, p3, null, p1));
+		System.out.println(getStateUI(new Parser(p4, p3, null, p1)));
 	}
 
 	// 2 chat messages + 1 more hit from p1 that busts them
@@ -456,7 +452,7 @@ public class View {
 		p1.score += 10; // now we bust for sure :(
 		User.currentPlayerTurn = "3"; // bust causes turn to switch to next non-vacant spot
 
-		System.out.println(getStateUI(p4, p3, null, p1));
+		System.out.println(getStateUI(new Parser(p4, p3, null, p1)));
 	}
 
 	// p3 double downs...
@@ -559,7 +555,7 @@ public class View {
 		// just testing the worst case scenario (most characters in this string)
 		//User.chatbox.add("***RESULTS***- 123456789TET-BJACK 123456789TET-BJACK 123456789TET-BJACK 123456789TET-BJACK ");
 
-		System.out.println(getStateUI(p4, p3, null, p1));
+		System.out.println(getStateUI(new Parser(p4, p3, null, p1)));
 	}
 
 	private static void printCLEARTABLE() {
@@ -666,7 +662,7 @@ public class View {
 
 		User.resetStatics();
 
-		System.out.println(getStateUI(null, null, null, null));
+		System.out.println(getStateUI(new Parser(null, null, null, null)));
 	}
 
 }

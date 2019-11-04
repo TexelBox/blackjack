@@ -1,14 +1,24 @@
 package server;
 
 
-import java.io.*;
-import java.net.*;
-import java.nio.*;
-import java.nio.channels.*;
-import java.nio.charset.*;
-import java.util.*;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import client.Message;
+import client.View;
 
 /*
  * A simple TCP select server that accepts multiple connections and echo message back to the clients
@@ -25,8 +35,12 @@ import client.Message;
 public class API {
     public static int BUFFERSIZE = 32;
     public static int TIMEOUT_LENGTH = 200;
+    public static List<Socket> gui = new ArrayList<Socket>();
+    public Parser parser;
     
     public API() throws Exception {
+        this.parser = new Parser();
+        System.out.println("Welcome to blackjack");
 
         // Initialize buffers and coders for channel receive and send
         String line = "";
@@ -37,7 +51,7 @@ public class API {
         CharBuffer cBuffer = null;
         int bytesSent, bytesRecv;     // number of bytes sent or received
         
-        int portNum = 8080;
+        int portNum = 9000;
         
         // Initialize the selector
         Selector selector = Selector.open();
@@ -106,59 +120,54 @@ public class API {
                             cBuffer.flip();
                             line = cBuffer.toString();
                             System.out.print("TCP Client: " + line);
-                   
-
-                			File dir = new File(System.getProperty("user.dir"));
-                			File[] filesList = dir.listFiles();
                             
                         	switch(line) {
                         		case "terminate\n":
                         			terminated = true;
                         			System.out.println("terminating");
-                        			break;
-                    			
-                        		case "list\n":
-                        			cchannel.write(encoder.encode(CharBuffer.wrap("<<List begin>>\n")));
-                        			
-                        			for(File file : filesList) {
-                        			    if(file.isFile()) {
-                                			cchannel.write(encoder.encode(CharBuffer.wrap(file.getName() + "\n")));
-                                		}
-                        			}
-                        			cchannel.write(encoder.encode(CharBuffer.wrap("<<List end>>\n")));
-                        			break;
-                        			
-                        		default:
-                        			if((line.length() > 5) && line.substring(0,4).equals("get ")) {
-                        				String filename = line.substring(4);
-                        				filename = filename.substring(0, filename.length() - 1);
-                        				File thisFile = null;
-                            			for(File file : filesList) {
-                            			    if(file.isFile() && (file.getName().equals(filename))) {
-                            			    	thisFile = file;
-                                    		}
-                            			}
-                        				if(thisFile==null)
-                            				cchannel.write(encoder
-                            						.encode(CharBuffer.wrap("File " + filename + " not found.\n")));
-                        				else {
-                        					String newFileName = filename + "-" + cchannel.socket().getPort();
-                        					byte[] fileInBytes  = new byte [(int)thisFile.length()];
-                        					BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(thisFile));
-                        					bufferedInputStream.read(fileInBytes, 0, fileInBytes.length);
-                        					ByteBuffer fileByteBuffer = ByteBuffer.wrap(fileInBytes);
-                        					
-                            				cchannel.write(encoder.encode(CharBuffer.wrap("<<File begin>>\n")));
-                            				cchannel.write(encoder.encode(CharBuffer.wrap(newFileName + "\n")));
-                            				cchannel.write(fileByteBuffer);
-                        					
-                        					cchannel.write(encoder.encode(CharBuffer
-                        							.wrap("\n<<File end>>\nFile saved in "+ newFileName + " (" + thisFile.length() + "bytes)\n")));
-                        					bufferedInputStream.close();
-                        				}
-                        			} else {
-                        				cchannel.write(encoder.encode(CharBuffer.wrap("Unknown Command: " + line)));
-                        			}
+                                    break;
+                                    
+                                // initalizes the GUI
+                                case "<<GUI>>\n":
+                                    if(!gui.contains(socket))
+                                        gui.add(socket); // bind
+                                    
+                                    socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
+                                    break;
+
+                                default:
+                                    switch(line.substring(0, 3)) {
+                                        case "/t ":
+                                            for(Socket guiSocket: gui) {
+                                                guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + line.substring(3) + "\n")));
+                                            }
+                                            break;
+
+                                        case "/a ":
+                                            if(this.parser.authenticate(line.substring(3))) {
+                                                if(this.parser.setUser(line.substring(3))==-1)
+                                                    cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
+                                                else
+                                                    cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+                                            } else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
+                                            
+                                        case "/b ":
+                                        case "/h ":
+                                        case "/s ":
+                                        case "/d ":
+                                        case "/j ":
+                                        case "/q ":
+                                            // action happens
+                                            // logic goes here
+                                        
+                                        // make sure everything gets processed beforehand here
+                                        default:
+                                           
+                                        String UIState = View.getStateUI(this.parser);
+                                            for(Socket guiSocket: gui) {
+                                                guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n")));
+                                            }
+                                    }
                         	}
                                 
                             // Echo the message back
@@ -166,6 +175,8 @@ public class API {
                             if (bytesSent != bytesRecv) {
                                 System.out.println("write() error, or connection closed");
                                 key.cancel();  // deregister the socket
+                                if(gui.contains(socket))
+                                    gui.remove(socket);
                                 continue;
                             }
                          }
@@ -190,14 +201,4 @@ public class API {
                 ((SocketChannel)key.channel()).socket().close();
         }
     }
-
-	public Message getMessage() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void respond(Message message) {
-		// TODO Auto-generated method stub
-		
-	}
 }
