@@ -21,8 +21,10 @@ public class View {
 	public static final String UI_COMMAND_INFO = 
 											  "COMMON COMMANDS: /t(alk) <msg>\n"
 											+ "PLAYER COMMANDS: /b(et) <value>, /s(tand), /h(it), /d(ouble)\n"
-											+ "SPECTATOR COMMANDS: /j(oin), /q(uit)";
+											+ "SPECTATOR COMMANDS: /j(oin), /q(uit)\n";
 	public static final String UI_ENTER_COMMAND = "Enter command: ";
+	public static final String UI_SANTIZATION_ERROR = "Please do not enter any special characters.\n";
+	public static final String UI_BET_ERROR = "Please enter a numeric value after your bet. No decimals.\n";
 
 	public static final int NB_CHATBOX_LINES = 24;
 	public static final int NB_CHATBOX_LINE_WIDTH = 96;
@@ -365,7 +367,7 @@ public class View {
 		// assuming client sides already error checked these numbers and this is the state updates sent back by server
 		p1.bet = 42;
 		p1.balance -= p1.bet;
-		p3.bet = 1;
+		p3.bet = 1; 
 		//p3.balance -= p3.bet; //NOTE: I don't do this cause they'd get to a balance of 0, which we should clamp to a min of $1 so people don't get locked out of play
 		p4.bet = 100;
 		p4.balance -= p4.bet;

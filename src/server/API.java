@@ -7,7 +7,6 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /*
  * A simple TCP select server that accepts multiple connections and echo message back to the clients
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 public class API {
     public static int BUFFERSIZE = 32;
     public static int TIMEOUT_LENGTH = 200;
-    public static Socket gui = null;
+    public static List<Socket> gui = new ArrayList<Socket>();
     
     public API() throws Exception {
         System.out.println("Welcome to blackjack");
@@ -116,26 +115,33 @@ public class API {
                                     
                                 // initalizes the GUI
                                 case "<<GUI>>\n":
-                                    gui = socket; // bind
-                                    gui.getChannel().write(encoder.encode(CharBuffer.wrap("GAMEBOARD HERE")));
+                                    if(!gui.contains(socket))
+                                        gui.add(socket); // bind
+                                    
+                                    socket.getChannel().write(encoder.encode(CharBuffer.wrap("GAMEBOARD HERE")));
                                     break;
 
                                 default:
                                     String response = "ok";
                                     System.out.println("Response: " + response);
 
+                                    // player updates
                                     cchannel.write(encoder.encode(CharBuffer.wrap(response + "\n")));
+                                    
+                                    // gui updates
+                                    System.out.println("GUI "+ line.substring(3));
+                                    switch(line.substring(0, 3)) {
+                                        case "/t ":
+                                            for(Socket guiSocket: gui) {
+                                                guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + line.substring(3) + "\n")));
+                                            }
+                                            break;
+                                        default:
+                                            for(Socket guiSocket: gui) {
+                                                guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("HELLO WORLD" + "\n")));
+                                            }
 
-                                    // reload GUI
-                                    if(true) {
-                                        if(gui!=null)
-                                            gui.getChannel().write(encoder.encode(CharBuffer.wrap("HELLO WORLD" + "\n")));
-                                    } else {
-                                   // append texts
-                                        if(gui!=null)
-                                        gui.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + response + "\n")));
                                     }
-
                         	}
                                 
                             // Echo the message back
@@ -143,6 +149,8 @@ public class API {
                             if (bytesSent != bytesRecv) {
                                 System.out.println("write() error, or connection closed");
                                 key.cancel();  // deregister the socket
+                                if(gui.contains(socket))
+                                    gui.remove(socket);
                                 continue;
                             }
                          }

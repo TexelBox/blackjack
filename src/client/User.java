@@ -38,28 +38,34 @@ public class User implements Runnable {
 		API service;
 		String username = "";
 		String arg1;
+		String arg2;
 		scan = new Scanner(System.in);
 
 		try {
 			service = new API();
 			
 			while(username.equals("")) {
-				System.out.println("Username?");
+				System.out.print(View.UI_ENTER_USERNAME);
 				arg1 = scan.nextLine();
 				
-				System.out.println("Password?");
-				Message m = service.sendAndWait(new Message(arg1, scan.nextLine()));
-			
-				if(m.ok()) {
-					username = arg1;
-					System.out.println("Welcome " + username);
-				}
-				else System.out.println("Invalid user");
+				System.out.println(View.UI_ENTER_PASSWORD);
+				arg2 = scan.nextLine();
 
+				if(arg1.contains(":")||arg2.contains(":")) {
+					System.out.print(View.UI_SANTIZATION_ERROR);
+				} else {
+					Message m = service.sendAndWait(new Message(arg1, arg2));
+					if(m.ok()) {
+						username = arg1;
+						System.out.println("Welcome " + username);
+					}
+					else System.out.println("Invalid user");
+				}
 			}
-			System.out.println("Join the game or spectate?");
-			arg1 = scan.nextLine(); // blocks
-			service.send(new Message(arg1));
+			// join game prompt
+			// System.out.println("Join the game or spectate?");
+			// arg1 = scan.nextLine(); // blocks
+			// service.send(new Message(arg1));
 
 			// fix balance
 			Executors
@@ -67,10 +73,38 @@ public class User implements Runnable {
 				.scheduleAtFixedRate(new User(service, username, 0), 0, 100, TimeUnit.MILLISECONDS);
 						
 			// get input
-			System.out.print("input command: ");
+			System.out.print(View.UI_COMMAND_INFO);
+			System.out.print(View.UI_ENTER_COMMAND);
+
 			while(scan.hasNextLine()) {
-				System.out.print("input command: ");
-				outGoing.add(scan.nextLine());
+				System.out.print(View.UI_ENTER_COMMAND);
+				String nextLine = scan.nextLine();
+
+				//sanitization
+				if(nextLine.contains(":")) {
+					System.out.print(View.UI_SANTIZATION_ERROR);
+				}
+
+				switch(nextLine.substring(0,3)) {
+					case "/b ":
+						if(!nextLine.substring(4).matches("\\d+(\\d+)?")) {
+							System.out.print(View.UI_BET_ERROR);
+							break;
+						}
+					case "/h ":
+					case "/s ":
+					case "/d ":
+					case "/t ":
+					case "/j ":
+					case "/q ":
+					case "/x ": // testing only
+						outGoing.add(nextLine.substring(0,3) + username + ": " + nextLine.substring(3));
+						break;
+
+					default:
+						System.out.print(View.UI_COMMAND_INFO);
+
+				}
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -86,6 +120,13 @@ public class User implements Runnable {
 		this.balance = balance;
 	}
 
+	// test user
+	User(String username, int balance) {
+		this.service = null;
+		this.username = username;
+		this.balance = balance;
+	}
+
 	public static void resetStatics() {
 		currentPlayerTurn = "0";
 		dealerScore = -1;
@@ -96,14 +137,16 @@ public class User implements Runnable {
 
 	// view updates
 	public void run() {
-		List<Message> messages = this.service.receive();
-		for(Message message: messages) {
-			System.out.flush();
+		if(this.service!=null) {
+			List<Message> messages = this.service.receive();
+			for(Message message: messages) {
+				System.out.flush();
+			}
+	
+			for(String message: outGoing) {
+				this.service.send(new Message(message));			
+			}
+			outGoing = new ArrayList<String>();
 		}
-
-		for(String message: outGoing) {
-			this.service.send(new Message(message));			
-		}
-		outGoing = new ArrayList<String>();
 	}
 }
