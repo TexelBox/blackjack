@@ -1,13 +1,13 @@
 package client; //TODO: move into logic namespace, so that it can be used between server and client APIs
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Timer;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.Timer;
-import java.util.List;
-import java.util.ArrayList;
 
 public class User implements Runnable {
 	
