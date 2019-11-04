@@ -39,7 +39,7 @@ public class Card {
 	
 	public Card(String body) {
 		
-		String[] msg = body.split("<|>");
+		String[] msg = body.split(":");
 		this.suit = Suit.valueOf(msg[0]);
 		this.value = Value.valueOf(msg[1]);
 	}
@@ -57,6 +57,6 @@ public class Card {
 	}
 	
 	public String toString() {
-		return suit.toString() + "<|>" + value.toString();
+		return suit.toString() + ":" + value.toString();
 	}
 }

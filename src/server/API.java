@@ -146,6 +146,16 @@ public class API {
                                                 guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + line.substring(3) + "\n")));
                                             }
                                             break;
+
+                                        case "/b ":
+                                        case "/h ":
+                                        case "/s ":
+                                        case "/d ":
+                                        case "/j ":
+                                        case "/q ":
+                                            // action happens
+                                            // logic goes here
+                                        
                                         default:
                                             for(Socket guiSocket: gui) {
                                                 guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("HELLO WORLD" + "\n")));

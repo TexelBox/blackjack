@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Turn {
 	
-	class Result extends ActionBuffer {
+	public class Result extends ActionBuffer {
 		Hand hand;
 		int balance;
 		
