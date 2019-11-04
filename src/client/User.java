@@ -3,10 +3,16 @@ package client;
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.Timer;
-import java.util.TimerTask;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Queue;
 
-public class User extends TimerTask {
+public class User implements Runnable {
 	
 	public static String currentPlayerTurn;
 	protected API service;
@@ -21,6 +27,8 @@ public class User extends TimerTask {
 	protected static LinkedList<String> chatbox = new LinkedList<String>();
 	Timer timer;
 	protected static Scanner scan;
+
+	static List<String> outGoing = new ArrayList<String>();
 
 	public static void main(String args[]) {
 		API service;
@@ -38,32 +46,47 @@ public class User extends TimerTask {
 				System.out.println("Password?");
 				Message m = service.sendAndWait(new Message(arg1, scan.nextLine()));
 			
-				if(m.ok()) username = arg1;
+				if(m.ok()) {
+					username = arg1;
+					System.out.println("Welcome " + username);
+				}
 				else System.out.println("Invalid user");
+
 			}
 			System.out.println("Join the game or spectate?");
 			arg1 = scan.nextLine(); // blocks
 			service.send(new Message(arg1));
 
-			Timer timer = new Timer();
-			timer.schedule(new User(), 0, 100);
+			Executors
+				.newSingleThreadScheduledExecutor()
+				.scheduleAtFixedRate(new User(service), 0, 100, TimeUnit.MILLISECONDS);
+						
+			// get input
+			System.out.print("input command: ");
+			while(scan.hasNextLine()) {
+				System.out.print("input command: ");
+				outGoing.add(scan.nextLine());
+			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 
-	public void run() { 
-		this.updateView();
-		if(scan.hasNextLine()) {
-			this.service.send(new Message(scan.nextLine()));
-		}
+	User(API service) {
+		this.service = service;
 	}
 
-	public void updateView() {
-		for(Message message: this.service.receive()) {
-			System.out.println(message.toString()); // do stuff
+	// view updates
+	public void run() {
+		List<Message> messages = this.service.receive();
+		for(Message message: messages) {
+			System.out.flush();
 		}
+
+		for(String message: outGoing) {
+			this.service.send(new Message(message));			
+		}
+		outGoing = new ArrayList<String>();
 	}
 }

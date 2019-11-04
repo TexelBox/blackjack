@@ -14,12 +14,13 @@ public class Message {
 
 	public Message(String protocol) {
 		switch(protocol) {
-			case "a":
-
+			case "ok":
+				message = protocol;
+				okFlag = true;
 				break;
 			default:
-			// talk
-			message = protocol;
+				// talk
+				message = protocol;
 		}
 	}
 

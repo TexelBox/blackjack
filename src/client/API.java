@@ -34,11 +34,12 @@ public class API {
     
     public List<Message> receive() {
     	String line;
-    	List<Message> messages = new ArrayList<Message>();
+		List<Message> messages = new ArrayList<Message>();
     	try {
-			while ((line = inBuffer.readLine()) != null) {
+			while (inBuffer.ready() && (line = inBuffer.readLine()) != null) {
 			   messages.add(new Message(line));
 			}
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

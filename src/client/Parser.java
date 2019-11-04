@@ -8,8 +8,16 @@ public class Parser {
 			Arrays.asList("bob", "bill", "jack", "kane","master","fahim");
 	protected static final java.util.List<String> passwords = 
 			Arrays.asList("passw0rd", "john", "bone", "cage","theKing","brad");
-	protected User p1 = new User();
-	protected User p2 = new User();
+	protected User p1 = null;
+	protected User p2 = null;
+
+	public void setP1(User user) {
+		p1 = user; // bind
+	}
+
+	public void setP2(User user) {
+		p2 = user; // bind
+	}
 	
 	//To be used only by client
 	//Takes the string to update all players balances

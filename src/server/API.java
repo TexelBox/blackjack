@@ -7,8 +7,7 @@ import java.nio.*;
 import java.nio.channels.*;
 import java.nio.charset.*;
 import java.util.*;
-
-import client.Message;
+import java.util.concurrent.TimeUnit;
 
 /*
  * A simple TCP select server that accepts multiple connections and echo message back to the clients
@@ -25,8 +24,10 @@ import client.Message;
 public class API {
     public static int BUFFERSIZE = 32;
     public static int TIMEOUT_LENGTH = 200;
+    public static Socket gui = null;
     
     public API() throws Exception {
+        System.out.println("Welcome to blackjack");
 
         // Initialize buffers and coders for channel receive and send
         String line = "";
@@ -106,20 +107,35 @@ public class API {
                             cBuffer.flip();
                             line = cBuffer.toString();
                             System.out.print("TCP Client: " + line);
-                   
-
-                			File dir = new File(System.getProperty("user.dir"));
-                			File[] filesList = dir.listFiles();
                             
                         	switch(line) {
                         		case "terminate\n":
                         			terminated = true;
                         			System.out.println("terminating");
-                        			break;
+                                    break;
+                                    
+                                // initalizes the GUI
+                                case "<<GUI>>\n":
+                                    gui = socket; // bind
+                                    gui.getChannel().write(encoder.encode(CharBuffer.wrap("GAMEBOARD HERE")));
+                                    break;
 
                                 default:
-                                    // parse into a message
-                        			cchannel.write(encoder.encode(CharBuffer.wrap("You said: " + line)));
+                                    String response = "ok";
+                                    System.out.println("Response: " + response);
+
+                                    cchannel.write(encoder.encode(CharBuffer.wrap(response + "\n")));
+
+                                    // reload GUI
+                                    if(true) {
+                                        if(gui!=null)
+                                            gui.getChannel().write(encoder.encode(CharBuffer.wrap("HELLO WORLD" + "\n")));
+                                    } else {
+                                   // append texts
+                                        if(gui!=null)
+                                        gui.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + response + "\n")));
+                                    }
+
                         	}
                                 
                             // Echo the message back

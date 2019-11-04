@@ -1,14 +1,5 @@
 package server;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-
-import client.User;
-
 /**
  * Internal logic of black jack. We can call a library here
  * @author elvinlimpin
