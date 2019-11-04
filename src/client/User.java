@@ -1,35 +1,39 @@
-package client;
+package client; //TODO: move into logic namespace, so that it can be used between server and client APIs
 
 import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.Timer;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Queue;
 
 public class User implements Runnable {
 	
-	public static String currentPlayerTurn;
+	public enum UserType {
+		SPECTATOR, // default
+		PLAYER
+	}
+
+	public UserType userType = UserType.SPECTATOR; // client can check this type to error check over commands entered before sending to server
+
+	public static String currentPlayerTurn = "0"; // this should never be null and only go from 0-4 (0 means dealer)
 	protected API service;
-	protected String username;
-	protected int balance;
+	public String username = null; // must be init when new player joins table (NOTE: null will crash UI to inidicate you dun goofed)
+	public int balance = -1; // must be init when new player joins table (NOTE: -1 will not crash UI, but a visual balance of -1 will show up to also indicate you dun goofed)
 	protected UUID roomID;
-	protected int bet;
-	protected int score;
-	protected static int dealerScore;
-	protected LinkedList<String> cards = new LinkedList<String>();
-	protected static LinkedList<String> dealersCards = new LinkedList<String>();
-	protected static LinkedList<String> chatbox = new LinkedList<String>();
+	public int bet = -1; // -1 means blank, will be init after betting window
+	public int score = -1; // -1 means blank, will be init after hands delt and update on new cards received
+	public static int dealerScore = -1; // -1 means blank, 0 means ?? (hidden)
+	public LinkedList<String> cards = new LinkedList<String>();
+	public static LinkedList<String> dealersCards = new LinkedList<String>();
+	public static LinkedList<String> chatbox = new LinkedList<String>();
 	Timer timer;
 	protected static Scanner scan;
 
 	static List<String> outGoing = new ArrayList<String>();
-
+	
 	public static void main(String args[]) {
 		API service;
 		String username = "";
@@ -57,9 +61,10 @@ public class User implements Runnable {
 			arg1 = scan.nextLine(); // blocks
 			service.send(new Message(arg1));
 
+			// fix balance
 			Executors
 				.newSingleThreadScheduledExecutor()
-				.scheduleAtFixedRate(new User(service), 0, 100, TimeUnit.MILLISECONDS);
+				.scheduleAtFixedRate(new User(service, username, 0), 0, 100, TimeUnit.MILLISECONDS);
 						
 			// get input
 			System.out.print("input command: ");
@@ -73,9 +78,21 @@ public class User implements Runnable {
 		}
 	}
 
-	User(API service) {
+	//NOTE: only this constructor should be used when initializing a new player at the table (after join commands processed)
+	// all other fields will get updated in their initialization windows (betting, cards delt, game turns, etc.)
+	User(API service, String username, int balance) {
 		this.service = service;
+		this.username = username;
+		this.balance = balance;
 	}
+
+	public static void resetStatics() {
+		currentPlayerTurn = "0";
+		dealerScore = -1;
+		dealersCards.clear();
+		//NOTE: the chatbox does not get cleared here
+	}
+	
 
 	// view updates
 	public void run() {
