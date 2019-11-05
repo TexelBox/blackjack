@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class User implements Runnable {
-	
+
 	public enum UserType {
 		SPECTATOR, // default
 		PLAYER
@@ -27,11 +27,14 @@ public class User implements Runnable {
 	public LinkedList<String> cards = new LinkedList<String>();
 	public static LinkedList<String> dealersCards = new LinkedList<String>();
 	public static LinkedList<String> chatbox = new LinkedList<String>();
+	public static String DealerCardChanges;
+	public String[] playerChanges = {";"," ","~"," ","~"," ","~"," ","~"," "};
+	public static String chatChanges = "";
 	Timer timer;
 	protected static Scanner scan;
 
 	static List<String> outGoing = new ArrayList<String>();
-	
+
 	public static void main(String args[]) {
 		API service;
 		String username = "";
@@ -41,11 +44,11 @@ public class User implements Runnable {
 
 		try {
 			service = new API();
-			
+
 			while(username.equals("")) {
 				System.out.print(View.UI_ENTER_USERNAME);
 				arg1 = scan.nextLine();
-				
+
 				System.out.print(View.UI_ENTER_PASSWORD);
 				arg2 = scan.nextLine();
 
@@ -69,7 +72,7 @@ public class User implements Runnable {
 			Executors
 				.newSingleThreadScheduledExecutor()
 				.scheduleAtFixedRate(new User(service, username, 0), 0, 50, TimeUnit.MILLISECONDS);
-						
+
 			// get input
 			System.out.print(View.UI_COMMAND_INFO);
 			System.out.print(View.UI_ENTER_COMMAND);
@@ -123,6 +126,34 @@ public class User implements Runnable {
 		this.balance = balance;
 	}
 
+
+	public int calcScore(User temp) {
+		temp.score = 0;
+		for(int i = 0;i < temp.cards.size();i++) {
+			try {
+				if(temp.cards.get(i).substring(0, 1).equals("1")) {
+					temp.score += 10;
+				}else {
+					temp.score = temp.score + Integer.parseInt(temp.cards.get(i).substring(0, 1));
+				}
+			//This is in case of a Ace jack king or queen
+			}catch(Exception e) {
+				if(temp.cards.get(i).substring(0,1).equals("A")) {
+					if(temp.score < 11) {
+						temp.score += 11;
+					}else {
+						temp.score += 1;
+					}
+				}if(temp.cards.get(i).substring(0,1).equals("Q")
+						|| temp.cards.get(i).substring(0,1).equals("K")
+						|| temp.cards.get(i).substring(0,1).equals("J")) {
+					temp.score += 10;
+				}
+
+			}
+		}
+		return temp.score;
+	}
 	// test user
 	public User(String username, int balance) {
 		this.service = null;
@@ -136,7 +167,7 @@ public class User implements Runnable {
 		dealersCards.clear();
 		//NOTE: the chatbox does not get cleared here
 	}
-	
+
 
 	// view updates
 	public void run() {
@@ -145,9 +176,9 @@ public class User implements Runnable {
 			for(Message message: messages) {
 				System.out.flush();
 			}
-	
+
 			for(String message: outGoing) {
-				this.service.send(new Message(message));			
+				this.service.send(new Message(message));
 			}
 			outGoing = new ArrayList<String>();
 		}

@@ -40,7 +40,7 @@ public class Parser {
 	public List<User> getUsers() {
 		return users; // bind
 	}
-	
+
 	//To be used only by client
 	//Takes the string to update all players balances
 	//String will look like *P1USERNAME~P1BALANCE;P2USERNAME~P2BALANCE
@@ -66,7 +66,7 @@ public class Parser {
 	//		p1.balance = Integer.parseInt(p1State[1]);
 	//		p2.bet = Integer.parseInt(p2State[0]);
 	//		p2.balance = Integer.parseInt(p2State[1]);
-	//		
+	//
 	//	}
 
 
@@ -79,16 +79,16 @@ public class Parser {
 		String[] dealer = playerState[1].split("~"); //splits the dealer,p1, and p2 into score and cards
 		String[] p0State = playerState[2].split("~");
 		String[] p1State = playerState[3].split("~");
-		
-		
-		
+
+
+
 		//state set
 		if(!playerState[0].trim().isEmpty()) {
 			User.currentPlayerTurn = playerState[0];
 		}
-		
+
 		//dealer turn set
-		
+
 		if(!dealer[0].trim().isEmpty()) {
 			User.dealerScore = Integer.parseInt(dealer[0]);
 		}
@@ -96,9 +96,9 @@ public class Parser {
 			User.dealersCards.add(dealer[1]);
 		}
 
-		
+
 		//player one turn set
-		
+
 		if(!p0State[0].trim().isEmpty()) {
 			this.users.get(0).bet = Integer.parseInt(p0State[0]);
 		}
@@ -111,8 +111,8 @@ public class Parser {
 		}if(!p0State[4].trim().isEmpty()) {
 			this.users.get(0).balance = Integer.parseInt(p0State[4]);
 		}
-		
-		
+
+
 		//Player 2 turn set
 		if(!p1State[0].trim().isEmpty()) {
 			this.users.get(1).bet = Integer.parseInt(p1State[0]);
@@ -126,7 +126,7 @@ public class Parser {
 		}if(!p1State[4].trim().isEmpty()) {
 			this.users.get(1).balance = Integer.parseInt(p1State[4]);
 		}
-		
+
 		//messages set
 		String[] indMessages = messSeperate[1].split(";");
 		for(int i = 0;i<indMessages.length;i++) {
@@ -173,26 +173,39 @@ public class Parser {
 		if(this.users.get(0).username.equals(action[2])) { temp = this.users.get(0);other=this.users.get(1); }
 
 		if(action[0].equalsIgnoreCase("h")) {
-			//CALCULATE THE CARD VALUE
-			temp.cards.add("NEEDS TO BE CALCULATED STILL");
+			temp.cards.add(Card.deckOfCards.pop());
+			temp.playerChanges[5] = temp.cards.getLast();
+			temp.calcScore(temp);
+			temp.playerChanges[3] = String.valueOf(temp.score);
 		}else if(action[0].equalsIgnoreCase("t")) {
 			User.chatbox.add(temp.username + "- " + action[1]);
+			User.chatChanges = User.chatChanges + User.chatbox.getLast();
 		}else if(action[0].equalsIgnoreCase("d")) {
 			temp.bet *=2;
-			//CALCULATE THE CARD VALUE
-			temp.cards.add("NEEDS TO BE CALCULATED STILL"); 
+			temp.cards.add(Card.deckOfCards.pop());
+			temp.playerChanges[1] = String.valueOf(temp.bet);
+			temp.playerChanges[5] = temp.cards.getLast();
+			temp.calcScore(temp);
+			temp.playerChanges[3] = String.valueOf(temp.score);
+
 		}else if(action[0].equalsIgnoreCase("b")) {
 			temp.bet = Integer.parseInt(action[1]);
+			temp.playerChanges[1] = String.valueOf(temp.bet);
 		}
 
 	}
-	//bascaly a tester function 
+	//bascaly a tester function
 	//has format of strings that should be passed in
 	public static void main(String args[]) {
 		Parser test = new Parser();
 		test.turnSet(" ; ~ ; ~20~AD~ ~ ; ~12~A2~ ~ :I hate my life:hfegfhewjfhjwe");
 		System.out.println(test.users.get(0).cards.getFirst());
 		System.out.println(test.users.get(0).score);
+		test.playerSet("bob~15;jim~13");
+		test.actionTaken("d;3;jim");
+		for(int i = 0;i < test.users.get(0).playerChanges.length;i++) {
+			System.out.print(test.users.get(0).playerChanges[i]);
+		}
 		//; ; ;
 //		test.actionTaken("H;i hate everyone here;jack");
 //		System.out.println(User.chatbox.getLast());
