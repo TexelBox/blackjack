@@ -3,6 +3,7 @@ package server;
 import java.util.List;
 import java.util.Arrays;
 import client.User;
+import client.User.UserType;
 
 public class Parser {
 	protected static final List<String> usernames = Arrays.asList("Aaron", "Amir", "Dom", "Elvin");
@@ -136,6 +137,21 @@ public class Parser {
 
 	}
 
+	
+	public boolean errorCheck(String input) {
+		String[] action = input.split(";");
+		User temp = this.users.get(1);
+		User other = this.users.get(0);
+		
+		if(this.users.get(0).username.equals(action[2])) { temp = this.users.get(0);other=this.users.get(1); }
+		if(temp.userType== UserType.PLAYER) {
+			return true;
+		}
+		if(!action[0].equalsIgnoreCase("t")) {
+			return false;
+		 }
+		return true;	
+	}
 	//Amir- hi everyone
 	//bob- hi eve
 
@@ -191,6 +207,9 @@ public class Parser {
 		}else if(action[0].equalsIgnoreCase("b")) {
 			temp.bet = Integer.parseInt(action[1]);
 			temp.playerChanges[1] = String.valueOf(temp.bet);
+		}else if(action[0].equalsIgnoreCase("s")) {
+			int next = Integer.parseInt(User.currentPlayerTurn);
+			User.currentPlayerTurn = String.valueOf(next++);
 		}
 
 	}
