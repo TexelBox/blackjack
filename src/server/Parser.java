@@ -197,14 +197,14 @@ public class Parser {
 	//bascaly a tester function
 	//has format of strings that should be passed in
 	public static void main(String args[]) {
-		Parser test = new Parser();
+		Parser test = new Parser(new User("Amir",200),new User("Elvin",20),null,null);
 		test.turnSet(" ; ~ ; ~20~AD~ ~ ; ~12~A2~ ~ :I hate my life:hfegfhewjfhjwe");
 		System.out.println(test.users.get(0).cards.getFirst());
 		System.out.println(test.users.get(0).score);
-		test.playerSet("bob~15;jim~13");
-		test.actionTaken("d;3;jim");
+		test.playerSet("Amir~15;Elvin~13");
+		test.actionTaken("d;3;Elvin");
 		for(int i = 0;i < test.users.get(0).playerChanges.length;i++) {
-			System.out.print(test.users.get(0).playerChanges[i]);
+			System.out.print(test.users.get(1).playerChanges[i]);
 		}
 		//; ; ;
 //		test.actionTaken("H;i hate everyone here;jack");
