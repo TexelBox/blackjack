@@ -69,15 +69,14 @@ public class Parser {
 	//		p2.balance = Integer.parseInt(p2State[1]);
 	//
 	//	}
-
-		
+	
 	public String lineToParserInput(String userInput) {
-		return userInput.substring(1).trim().split(":")[0].replace(" ", ";");
+		return userInput.substring(1).trim().split(":")[0].replace(" ", ";;");
 	}
-    public String betToParserInput(String userInput) {
-        return "b;" + userInput.substring(1).trim().split(":")[1].trim() + ";" + userInput.substring(3).replace(":", " ").trim();
-    }
 
+  	public String betToParserInput(String userInput) {
+      return "b;" + userInput.substring(1).trim().split(":")[1].trim() + ";" + userInput.split(":")[0].substring(3);
+  }
 
 	//sent in by server
 	//To be used only by client
@@ -147,18 +146,18 @@ public class Parser {
 
 	
 	public boolean errorCheck(String input) {
-		String[] action = input.split(";");
-		int turn = 1;
-		User temp = this.users.get(1);
-		User other = this.users.get(0);
+		// String[] action = input.split(";");
+		// int turn = 1;
+		// User temp = this.users.get(1);
+		// User other = this.users.get(0);
 		
-		if(this.users.get(0).username.equals(action[2])) { temp = this.users.get(0);other=this.users.get(1);turn = 0; }
-		if(temp.userType.equals(UserType.PLAYER) && User.currentPlayerTurn.equals(String.valueOf(turn))) {
-			return true;
-		}
-		if(!action[0].equalsIgnoreCase("t")) {
-			return false;
-		 }
+		// if(this.users.get(0).username.equals(action[2])) { temp = this.users.get(0);other=this.users.get(1);turn = 0; }
+		// if(temp.userType.equals(UserType.PLAYER) && User.currentPlayerTurn.equals(String.valueOf(turn))) {
+		// 	return true;
+		// }
+		// if(!action[0].equalsIgnoreCase("t")) {
+		// 	return false;
+		//  }
 		return true;	
 	}
 	//Amir- hi everyone
@@ -179,20 +178,20 @@ public class Parser {
 	public void actionTaken(String input) {
 
 		String[] action = input.split(";");
-		if(this.users.get(0)==null) {
-			if(action[0].equalsIgnoreCase("j")) {
-				this.users.get(0).username = action[2];
-			}
-			return;
+		// if(this.users.get(0)==null) {
+		// 	if(action[0].equalsIgnoreCase("j")) {
+		// 		this.users.get(0).username = action[2];
+		// 	}
+		// 	return;
 
-		}else if(this.users.get(1)==null) {
-			if(action[0].equalsIgnoreCase("j")) {
-				this.users.get(1).username = action[2];
-			}
-			return;
-		}else if (action[0].equalsIgnoreCase("j")) {
-			return;
-		}
+		// }else if(this.users.get(1)==null) {
+		// 	if(action[0].equalsIgnoreCase("j")) {
+		// 		this.users.get(1).username = action[2];
+		// 	}
+		// 	return;
+		// }else if (action[0].equalsIgnoreCase("j")) {
+		// 	return;
+		// }
 		User temp = this.users.get(1);
 		User other = this.users.get(0);
 		if(this.users.get(0).username.equals(action[2])) { temp = this.users.get(0);other=this.users.get(1); }
@@ -214,7 +213,9 @@ public class Parser {
 			temp.playerChanges[3] = String.valueOf(temp.score);
 
 		}else if(action[0].equalsIgnoreCase("b")) {
+			System.out.println("7");
 			temp.bet = Integer.parseInt(action[1]);
+			temp.balance -= temp.bet;
 			temp.playerChanges[1] = String.valueOf(temp.bet);
 		}else if(action[0].equalsIgnoreCase("s")) {
 			int next = Integer.parseInt(User.currentPlayerTurn);

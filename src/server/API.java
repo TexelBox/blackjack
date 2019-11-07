@@ -69,6 +69,7 @@ public class API {
 
 		// Wait for something happen among all registered sockets
 		try {
+			Dealer.dealerPlay();
 			boolean terminated = false;
 			while (!terminated) {
 
@@ -119,7 +120,7 @@ public class API {
 							decoder.decode(inBuffer, cBuffer, false);
 							cBuffer.flip();
 							line = cBuffer.toString();
-							System.out.print("TCP Client: " + line);
+							System.out.print("TCP Client: " + line + "====" + this.parser.lineToParserInput(line) + "\n");
 
 							switch(line) {
 							case "terminate\n":
@@ -152,9 +153,18 @@ public class API {
 									} else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
 									break;
 								case "/b ":
-									String input = this.parser.betToParserInput(line);
+								System.out.println("0");	
+								String input = this.parser.betToParserInput(line);
+								System.out.println("1");
 									if(this.parser.errorCheck(input)) {
+
+										System.out.println("2");
 										this.parser.actionTaken(input);
+										System.out.println("3");
+
+										
+								System.out.println("4");
+
 										cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
 									}else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
 									break;

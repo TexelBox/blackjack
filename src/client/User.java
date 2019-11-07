@@ -91,7 +91,9 @@ public class User implements Runnable {
 					System.out.print(View.UI_COMMAND_INFO);
 				} else switch(nextLine.substring(0,3)) {
 					case "/b ":
-						if(!nextLine.substring(4).matches("\\d+(\\d+)?")) {
+						try {
+							Integer.parseInt(nextLine.substring(4).trim());
+						} catch(Exception e) {
 							System.out.print(View.UI_BET_ERROR);
 							break;
 						}
@@ -131,11 +133,11 @@ public class User implements Runnable {
 		temp.score = 0;
 		for(int i = 0;i < temp.cards.size();i++) {
 			try {
-				if(temp.cards.get(i).substring(0, 1).equals("1")) {
-					temp.score += 10;
-				}else {
+				// if(temp.cards.get(i).substring(0, 1).equals("1")) {
+					// temp.score += 10;
+				// }else {
 					temp.score = temp.score + Integer.parseInt(temp.cards.get(i).substring(0, 1));
-				}
+				// }
 			//This is in case of a Ace jack king or queen
 			}catch(Exception e) {
 				if(temp.cards.get(i).substring(0,1).equals("A")) {
@@ -146,7 +148,8 @@ public class User implements Runnable {
 					}
 				}if(temp.cards.get(i).substring(0,1).equals("Q")
 						|| temp.cards.get(i).substring(0,1).equals("K")
-						|| temp.cards.get(i).substring(0,1).equals("J")) {
+						|| temp.cards.get(i).substring(0,1).equals("J")
+						|| temp.cards.get(i).substring(0,1).equals("T")) {
 					temp.score += 10;
 				}
 

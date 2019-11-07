@@ -23,9 +23,10 @@ public class Dealer {
 	}
 
 	public Dealer() {
-
+		
 	}
 	public static void dealerPlay() {
+		Card.shuffleCards();
 		User.dealersCards.add(Card.deckOfCards.pop());
 		User.DealerCardChanges = User.dealersCards.getLast();
 		User.dealerScore = 0;
