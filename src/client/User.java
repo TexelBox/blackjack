@@ -11,15 +11,15 @@ import java.util.regex.*;
 
 public class User implements Runnable {
 
-	public enum UserType {
-		SPECTATOR, // default
-		PLAYER
-	}
+	//public enum UserType {
+	//	SPECTATOR, // default
+	//	PLAYER
+	//}
 
-	public UserType userType = UserType.SPECTATOR; // client can check this type to error check over commands entered before sending to server
+	//public UserType userType = UserType.SPECTATOR; // client can check this type to error check over commands entered before sending to server
 
 	public static String currentPlayerTurn = "0"; // this should never be null and only go from 0-4 (0 means dealer)
-	protected API service;
+	protected API service = null;
 	public String username = null; // must be init when new player joins table (NOTE: null will crash UI to inidicate you dun goofed)
 	public int balance = -1; // must be init when new player joins table (NOTE: -1 will not crash UI, but a visual balance of -1 will show up to also indicate you dun goofed)
 	public int bet = -1; // -1 means blank, will be init after betting window
@@ -29,8 +29,8 @@ public class User implements Runnable {
 	public static LinkedList<String> dealersCards = new LinkedList<String>();
 	public static LinkedList<String> chatbox = new LinkedList<String>();
 	public static String DealerCardChanges;
-	public String[] playerChanges = {";"," ","~"," ","~"," ","~"," ","~"," "};
-	public static String chatChanges = "";
+	//public String[] playerChanges = {";"," ","~"," ","~"," ","~"," ","~"," "};
+	//public static String chatChanges = "";
 	Timer timer;
 	protected static Scanner scan = null;
 
@@ -70,8 +70,9 @@ public class User implements Runnable {
 				// send to server and get validation string back
 				Message m = service.sendAndWait(new Message(arg1, arg2));
 				if (m.ok()) {
-					username = arg1;
+					username = arg1; // save my username on this client
 					System.out.println("Welcome " + username);
+					invalidInput = false; // break out of loop
 				} else {
 					if (m.toString().equals("full")) System.out.print(View.UI_FULL_ERROR); // table is full
 					else System.out.print(View.UI_AUTH_ERROR); // username does not exist on server or password is wrong
@@ -89,39 +90,140 @@ public class User implements Runnable {
 
 			while(scan.hasNextLine()) {
 				String nextLine = scan.nextLine();
-				//sanitization
-				if(nextLine.contains(";")) {
-					System.out.print(View.UI_SANTIZATION_ERROR);
+
+				// client side error handling below...
+				// the client side can do some general error handling here that does not depend on the game state (those errors will be handled on server)
+				// in particular, the client can only ever send 1 of the allowed commands
+				/*
+					1. trim(), check not empty
+					2. check char[0] is '/'
+					"/q"
+					"/j"
+					"/b <int val btwn 1 and 100>"
+					"/s"
+					"/h"
+					"/d"
+					"/t <currently just make this an alpha-numeric string of size 1 to 82 (right now, no error msg for going over 82, but instead cut the string off - can use View method for this)>"
+				*/
+
+				nextLine = nextLine.trim();
+				if (nextLine.isEmpty()) {
+					//TODO: error msg
+					continue; //?
 				}
 
-				if(nextLine.length() == 0) {
+				String[] parts = nextLine.split("\\s+"); // split by whitespace chars
+				//NOTE: parts.length cannot be 0, so no need to check
+				String cmdStr = parts[0];
 
-				} else if(nextLine.length() < 3) {
-					System.out.print(View.UI_COMMAND_ERROR);
-					System.out.print(View.UI_COMMAND_INFO);
-				} else switch(nextLine.substring(0,3)) {
-					case "/b ":
-						try {
-							Integer.parseInt(nextLine.substring(4).trim());
-						} catch(Exception e) {
-							System.out.print(View.UI_BET_ERROR);
-							break;
+				//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.....remove this
+				// ready up the message to send based on protocol if everything is to go right...
+				// format: "(cmd):(state):(username)" =:= "(parts[0].charAt(1):parts.length > 1 ? parts[1] : " ":(username)"
+
+				//NOTE: this looks really redundant and I could use fall-through cases here, but i'm leaving it like this so that each case could have different specific error msgs if needed
+				switch(cmdStr) {
+					case "/q":
+						if (1 == parts.length) {
+							// success, send to server
+							outGoing.add("q: :" + username);
+							// if "ok", call system.exit
+							// else, error msg
+						} else {
+							//error
 						}
-					case "/h ":
-					case "/s ":
-					case "/d ":
-					case "/t ":
-					case "/j ":
-					case "/q ":
-					case "/x ": // testing only
-						outGoing.add(nextLine.substring(0,3) + username + ": " + nextLine.substring(3));
 						break;
+					case "/j":
+						if (1 == parts.length) {
+							// success, send to server
+							outGoing.add("j: :" + username);
+							// if "ok", do nothing
+							// else, error msg
+						} else {
+							//error
+						}
+						break;
+					case "/b":
+						if (2 == parts.length) {
+							String betValStr = parts[1];
+							if (isNonNegativeInt(betValStr)) {
+								//NOTE: an exception should be impossible here
+								int betVal = Integer.parseInt(betValStr); // trims any leading zeros
+								if (betVal >= View.NB_BET_MIN_VALUE && betVal <= View.NB_BET_MAX_VALUE) {
+									// success, send to server
+									outGoing.add("b:" + betVal + ":" + username);
+									// if "ok", do nothing
+									// else, error msg
+								} else {
+									//error
+								}
+							} else {
+								//error
+							}
+						} else {
+							//error
+						}
+						break;
+					case "/s":
+						if (1 == parts.length) {
+							// success, send to server
+							outGoing.add("s: :" + username);
+							// if "ok", do nothing
+							// else, error msg
+						} else {
+							//error
+						}
+						break;
+					case "/h":
+						if (1 == parts.length) {
+							// success, send to server
+							outGoing.add("h: :" + username);
+							// if "ok", do nothing
+							// else, error msg
+						} else {
+							//error
+						}
+						break;
+					case "/d":
+						if (1 == parts.length) {
+							// success, send to server
+							outGoing.add("d: :" + username);
+							// if "ok", do nothing
+							// else, error msg
+						} else {
+							//error
+						}
+						break;
+					case "/t":
+						if (2 <= parts.length) {
+							String wordsConcat = "";
+							for (int i = 1; i < parts.length; ++i) {
+								wordsConcat += parts[i];
+							}
 
+							// sanitize...
+							// 1. for now, all words must be alpha-numeric (which handles special characters as well)
+							if (isAlphaNumeric(wordsConcat)) {
+
+								String msg = nextLine.substring(3).trim();
+								// 2. also, if the string is too long, it will get cut off...
+								if (msg.length() > View.NB_CHATBOX_MSG_CHAR_LIMIT) msg = msg.substring(0, View.NB_CHATBOX_MSG_CHAR_LIMIT);
+								
+								// success, send to server
+								outGoing.add("t:" + msg + ":" + username);
+								// this should always get "ok" back, so do nothing
+							} else {
+								//error
+							}
+						} else {
+							//error
+						}
+						break;
 					default:
+						// error
 						System.out.print(View.UI_COMMAND_ERROR);
 						System.out.print(View.UI_COMMAND_INFO);
-
 				}
+				//outGoing.add(nextLine.substring(0,3) + username + ": " + nextLine.substring(3)); //TODO: delete this after I fix protocol stuff
 				System.out.print(View.UI_ENTER_COMMAND);
 			}
 		} catch (Exception e) {
@@ -139,6 +241,11 @@ public class User implements Runnable {
 	}
 
 
+
+
+
+	//TODO: remove the param and just use 'this'...
+	//TODO: this also doesn't work with say "AAK" which will wrongly be 22
 	public int calcScore(User temp) {
 		temp.score = 0;
 		for(int i = 0;i < temp.cards.size();i++) {
@@ -167,6 +274,11 @@ public class User implements Runnable {
 		}
 		return temp.score;
 	}
+
+
+
+
+
 	// test user
 	public User(String username, int balance) {
 		this.service = null;
@@ -190,6 +302,9 @@ public class User implements Runnable {
 				System.out.flush();
 			}
 
+
+
+			//TODO: get back error states???
 			for(String message: outGoing) {
 				this.service.send(new Message(message));
 			}
@@ -203,6 +318,16 @@ public class User implements Runnable {
 	private static boolean isAlphaNumeric(String s) {
 		if (null == s) return false;
 		if (!s.matches("^[a-zA-Z0-9]+$")) return false;
+		
+		return true;
+	}
+
+	//NOTE: "" returns false
+	//NOTE: "-1", "+1" returns false
+	//NOTE: "0", "00", "01" return true
+	private static boolean isNonNegativeInt(String s) {
+		if (null == s) return false;
+		if (!s.matches("^[0-9]+$")) return false;
 		
 		return true;
 	}

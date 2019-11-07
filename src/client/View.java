@@ -41,6 +41,8 @@ public class View {
 	public static final int NB_TURN_FIELD_SIZE = 6;
 	public static final int NB_SCORE_FIELD_SIZE = 2;
 	public static final int NB_BET_FIELD_SIZE = 4;
+	public static final int NB_BET_MIN_VALUE = 1;
+	public static final int NB_BET_MAX_VALUE = 100; // $100 on /b, but a /d can increase it to $200
 	public static final int NB_MAX_CARDS_IN_HAND = 12;
 	public static final int NB_BALANCE_FIELD_SIZE = 8;
 
@@ -230,7 +232,7 @@ public class View {
         + "|                                                                              ||;"
         + "|         "+turns[4]+"            "+turns[3]+"            "+turns[2]+"            "+turns[1]+"         ||;"
         + "|        BET:"+bets[3]+"          BET:"+bets[2]+"          BET:"+bets[1]+"          BET:"+bets[0]+"        ||;"
-        + "|                                                                              |;"
+        + "|                                                                              ||;"
         + "|        SCORE:"+scores[4]+"          SCORE:"+scores[3]+"          SCORE:"+scores[2]+"          SCORE:"+scores[1]+"        ||;"
         + "|      "+cards[4][0][0]+cards[4][0][1]+cards[4][0][2]+cards[4][0][3]+"      "+cards[3][0][0]+cards[3][0][1]+cards[3][0][2]+cards[3][0][3]+"      "+cards[2][0][0]+cards[2][0][1]+cards[2][0][2]+cards[2][0][3]+"      "+cards[1][0][0]+cards[1][0][1]+cards[1][0][2]+cards[1][0][3]+"      ||;"
         + "|      "+cards[4][1][0]+cards[4][1][1]+cards[4][1][2]+cards[4][1][3]+"      "+cards[3][1][0]+cards[3][1][1]+cards[3][1][2]+cards[3][1][3]+"      "+cards[2][1][0]+cards[2][1][1]+cards[2][1][2]+cards[2][1][3]+"      "+cards[1][1][0]+cards[1][1][1]+cards[1][1][2]+cards[1][1][3]+"      ||;"

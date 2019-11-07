@@ -19,7 +19,6 @@ public class Message {
 			case "ok":
 				okFlag = true;
 				break;
-
 			default:
 				okFlag = false;
 		}
@@ -37,7 +36,7 @@ public class Message {
 
 	public String toString() {
 		if(!this.password.equals("")) {
-			return this.username + ";" + this.password;
+			return this.username + ":" + this.password;
 		} else if(!this.message.equals("")) {
 			return this.message;
 		}

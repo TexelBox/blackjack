@@ -33,10 +33,10 @@ import client.View;
  */
 
 public class API {
-	public static int BUFFERSIZE = 32;
+	public static int BUFFERSIZE = 32; //TODO: increase this to 96 or 128 (better), cause right now it cuts off chat messages and causes looping bugs
 	public static int TIMEOUT_LENGTH = 200;
 	public static List<Socket> gui = new ArrayList<Socket>();
-	public Parser parser;
+	public Parser parser = null;
 
 	public API() throws Exception {
 		this.parser = new Parser();
@@ -69,7 +69,7 @@ public class API {
 
 		// Wait for something happen among all registered sockets
 		try {
-			Dealer.dealerPlay();
+			Dealer.dealerPlay(); //TODO: move this away
 			boolean terminated = false;
 			while (!terminated) {
 
@@ -120,73 +120,60 @@ public class API {
 							decoder.decode(inBuffer, cBuffer, false);
 							cBuffer.flip();
 							line = cBuffer.toString();
-							System.out.print("TCP Client: " + line + "====" + this.parser.lineToParserInput(line) + "\n");
+							
+							System.out.print("TCP Client: " + line + "\n");
 
-							switch(line) {
-							//case "terminate\n":
-							//	terminated = true;
-							//	System.out.println("terminating");
-							//	break;
+							//System.out.print("TCP Client: " + line + "====" + this.parser.lineToParserInput(line) + "\n");
 
-							// initalizes the GUI
-							case "<<GUI>>\n":
-								if(!gui.contains(socket))
-									gui.add(socket); // bind
+							// AUTH...
+							// special case that im extracting to here
+							if (line.substring(0, 3).equals("/a ")) {
+								if (this.parser.authenticate(line.substring(3))) {
+									if (this.parser.setUser(line.substring(3)) == -1) cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
+									else cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+								} else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
+							} else if (line.substring(0, 1).equals("t")) { // right now, the talking is not passed to parser state 
+								cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n"))); //NOTE: doing this first to not hang up client
+								String[] parts = line.split(":");
+								String msg = parts[1];
+								String username = parts[2];
+								for (Socket guiSocket : gui) {
+									guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + username + ": " + msg + "\n")));
+								}
+							} else {
+								// top-level is for specific cases (could be handled better), inner switch is for main protocol handling
+								switch(line) {
+									// initalizes the GUI
+									case "<<GUI>>\n":
+										if (!gui.contains(socket)) gui.add(socket); // bind
 
-									socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
-									break;
-							default:
-								switch(line.substring(0, 3)) {
-								case "/t ":
-									for(Socket guiSocket: gui) {
-										guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + line.substring(3) + "\n")));
-									}
-									break;
+										socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
+										break;
+									default:
+										// otherwise, the only strings coming in will look like...
+										// "(cmd):(state):(username)"
+										// client has already done half the error checking
+										// here in the server, we must do 2nd half of error checking (make sure user is in a valid state to issue their command they sent us)
+										// ex. if (username) belongs to a spectator, and they sent us a "HIT" command, throw it back in their face and don't update the server state at all
 
-								case "/a ":
-									if(this.parser.authenticate(line.substring(3))) {
-										if(this.parser.setUser(line.substring(3))==-1) cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
-										else cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
-									} else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
-									break;
-								case "/b ":
-								System.out.println("0");	
-								String input = this.parser.betToParserInput(line);
-								System.out.println("1");
-									if(this.parser.errorCheck(input)) {
+										// process
+										// 1. call Parser's errorCheck(line)
+										// 2. if there was an error (oh no!) send back a "no", yo! --- i'm sorry, it's late
+										//    else, call Parser's actionTaken(line) which updates state and then send back an "ok"
 
-										System.out.println("2");
-										this.parser.actionTaken(input);
-										System.out.println("3");
-
-										
-								System.out.println("4");
-
-										cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
-									}else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
-									break;
-								case "/h ":
-								case "/s ":
-								case "/d ":
-									input = this.parser.lineToParserInput(line);
-									if(this.parser.errorCheck(input)) {
-										this.parser.actionTaken(input);
-										cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
-									}else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
-									break;
-								case "/j ":
-								case "/q ":
-									// action happens
-									// logic goes here
-
-									// make sure everything gets processed beforehand here
-								default:
+										if (this.parser.errorCheck(line)) {
+											this.parser.actionTaken(line); // update state
+											cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+										} else {
+											cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
+										}
 								}
 							}
 
+							//TODO: this works, but could this cause delays since it updates all the gui's everytime someone sends in a command, even if nothings changed
 							String UIState = View.getStateUI(this.parser);
-							for(Socket guiSocket: gui) {
-								guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n")));
+							for (Socket guiSocket : gui) {
+								guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
 							}
 
 							// Echo the message back
@@ -194,8 +181,7 @@ public class API {
 							if (bytesSent != bytesRecv) {
 								System.out.println("write() error, or connection closed");
 								key.cancel();  // deregister the socket
-								if(gui.contains(socket))
-									gui.remove(socket);
+								if (gui.contains(socket)) gui.remove(socket);
 								continue;
 							}
 						}
