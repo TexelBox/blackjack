@@ -29,11 +29,15 @@ public class View {
 	public static final String UI_AUTH_ERROR = "Invalid credentials.\n";
 	public static final String UI_FULL_ERROR = "No more room for players.\n";
 	public static final String UI_COMMAND_ERROR = "\n\nPlease enter one of the following commands:\n";
+	public static final String UI_USERNAME_STR_ERROR = "Invalid username string. Must be alpha-numeric and between 1 and 12 characters.\n";
+	public static final String UI_PASSWORD_STR_ERROR = "Invalid password string. Must be alpha-numeric and between 1 and 32 characters.\n";
+
 
 	public static final int NB_CHATBOX_LINES = 24;
 	public static final int NB_CHATBOX_LINE_WIDTH = 96;
 	public static final int NB_CHATBOX_MSG_CHAR_LIMIT = 82;
 	public static final int NB_USERNAME_CHAR_LIMIT = 12;
+	public static final int NB_PASSWORD_CHAR_LIMIT = 32;
 	public static final int NB_TURN_FIELD_SIZE = 6;
 	public static final int NB_SCORE_FIELD_SIZE = 2;
 	public static final int NB_BET_FIELD_SIZE = 4;

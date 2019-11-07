@@ -122,19 +122,18 @@ public class API {
 							System.out.print("TCP Client: " + line);
 
 							switch(line) {
-							case "terminate\n":
-								terminated = true;
-								System.out.println("terminating");
-								break;
+							//case "terminate\n":
+							//	terminated = true;
+							//	System.out.println("terminating");
+							//	break;
 
-								// initalizes the GUI
+							// initalizes the GUI
 							case "<<GUI>>\n":
 								if(!gui.contains(socket))
 									gui.add(socket); // bind
 
 									socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
 									break;
-
 							default:
 								switch(line.substring(0, 3)) {
 								case "/t ":
@@ -145,10 +144,8 @@ public class API {
 
 								case "/a ":
 									if(this.parser.authenticate(line.substring(3))) {
-										if(this.parser.setUser(line.substring(3))==-1)
-											cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
-										else
-											cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+										if(this.parser.setUser(line.substring(3))==-1) cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
+										else cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
 									} else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
 									break;
 								case "/b ":

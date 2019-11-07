@@ -9,7 +9,7 @@ public class Parser {
 	protected static final List<String> usernames = Arrays.asList("Aaron", "Amir", "Dom", "Elvin");
 	protected static final List<String> passwords = Arrays.asList("1","2","3","4");
 	protected static final List<Integer> balances = Arrays.asList(100,200,300,400);
-	protected List<User> users = Arrays.asList(null, null, null, null);
+	protected List<User> users = Arrays.asList(null, null, null, null); // players at the table
 	protected List<User> spectators = Arrays.asList(null, null, null, null, null);
 
 	Parser() { }
@@ -19,6 +19,7 @@ public class Parser {
 		this.users = Arrays.asList(p0, p1, p2, p3);
 	}
 
+	//TODO: have users become spectators first rather than players like it does here...
 	public int setUser(String auth) {
 		for(int i = 0; i < users.size(); i++) {
 			if(users.get(i)==null) {
@@ -34,43 +35,21 @@ public class Parser {
 	}
 
 	public User getUserInfo(String username) {
+		if (null == username) return null;
+
 		int i = usernames.indexOf(username);
-		return new User(usernames.get(i), balances.get(i));
+		
+		// if this username is not saved in list...
+		if (-1 == i) return null;
+
+		// construct the user from scratch (hard-coded balance that could be read from file in A4)
+		return new User(usernames.get(i), balances.get(i)); //TODO: read balance in from file (A4)
 	}
 
 	public List<User> getUsers() {
 		return users; // bind
 	}
 
-	//To be used only by client
-	//Takes the string to update all players balances
-	//String will look like *P1USERNAME~P1BALANCE;P2USERNAME~P2BALANCE
-
-	// probably won't be used
-	public void playerSet(String input) {
-		String[] playerState = input.split(";");
-		String[] p1State = playerState[0].split("~");
-		String[] p2State = playerState[1].split("~");
-		this.users.get(0).username = p1State[0];
-		this.users.get(0).balance = Integer.parseInt(p1State[1]);
-		this.users.get(1).username = p2State[0];
-		this.users.get(1).balance = Integer.parseInt(p2State[1]);
-	}
-
-	//sent in from the server
-	//To be used only by client
-	//	public void playerBetSet(String input) {
-	//		String[] playerState = input.split(";");
-	//		String[] p1State = playerState[0].split("~");
-	//		String[] p2State = playerState[1].split("~");
-	//		p1.bet = Integer.parseInt(p1State[0]);
-	//		p1.balance = Integer.parseInt(p1State[1]);
-	//		p2.bet = Integer.parseInt(p2State[0]);
-	//		p2.balance = Integer.parseInt(p2State[1]);
-	//
-	//	}
-
-		
 	public String lineToParserInput(String userInput) {
 		return userInput.substring(1).trim().split(":")[0].replace(" ", ";");
 	}
@@ -79,73 +58,10 @@ public class Parser {
     }
 
 
-	//sent in by server
-	//To be used only by client
-	//Parses the string for each turn
-	public void turnSet(String input) {
-		String[] messSeperate = input.split(":");
-		String[] playerState = messSeperate[0].split(";"); //Split into playerturn dealer p1 p2 and chatbox
-		String[] dealer = playerState[1].split("~"); //splits the dealer,p1, and p2 into score and cards
-		String[] p0State = playerState[2].split("~");
-		String[] p1State = playerState[3].split("~");
-
-
-
-		//state set
-		if(!playerState[0].trim().isEmpty()) {
-			User.currentPlayerTurn = playerState[0];
-		}
-
-		//dealer turn set
-
-		if(!dealer[0].trim().isEmpty()) {
-			User.dealerScore = Integer.parseInt(dealer[0]);
-		}
-		if(!dealer[1].trim().isEmpty()) {
-			User.dealersCards.add(dealer[1]);
-		}
-
-
-		//player one turn set
-
-		if(!p0State[0].trim().isEmpty()) {
-			this.users.get(0).bet = Integer.parseInt(p0State[0]);
-		}
-		if(!p0State[1].trim().isEmpty()) {
-			this.users.get(0).score = Integer.parseInt(p0State[1]);
-		}if(!p0State[2].trim().isEmpty()) {
-			this.users.get(0).cards.add(p0State[2]);
-		}if(!p0State[3].trim().isEmpty()) {
-			this.users.get(0).username = p0State[3];
-		}if(!p0State[4].trim().isEmpty()) {
-			this.users.get(0).balance = Integer.parseInt(p0State[4]);
-		}
-
-
-		//Player 2 turn set
-		if(!p1State[0].trim().isEmpty()) {
-			this.users.get(1).bet = Integer.parseInt(p1State[0]);
-		}
-		if(!p1State[1].trim().isEmpty()) {
-			this.users.get(1).score = Integer.parseInt(p1State[1]);
-		}if(!p1State[2].trim().isEmpty()) {
-			this.users.get(1).cards.add(p1State[2]);
-		}if(!p1State[3].trim().isEmpty()) {
-			this.users.get(1).username = p1State[3];
-		}if(!p1State[4].trim().isEmpty()) {
-			this.users.get(1).balance = Integer.parseInt(p1State[4]);
-		}
-
-		//messages set
-		String[] indMessages = messSeperate[1].split(";");
-		for(int i = 0;i<indMessages.length;i++) {
-			User.chatbox.add(indMessages[i]);
-		}
-
-
-	}
-
-	
+	// server API will call this before sending input string to actionTaken()	
+	// true will cause API to then send "ok" back to client
+	// false will cause API to then send "no" back to client
+	// this string should be in the same form that actionTaken
 	public boolean errorCheck(String input) {
 		String[] action = input.split(";");
 		int turn = 1;
@@ -167,8 +83,8 @@ public class Parser {
 	//Takes in username and password and checks if its correct
 	public boolean authenticate(String input) {
 		String[] loginInfo = input.trim().split(";");
-		if(usernames.contains(loginInfo[0])) {
-			int index = usernames.indexOf(loginInfo[0]);
+		int index = usernames.indexOf(loginInfo[0]);
+		if(-1 != index) {
 			return passwords.get(index).equals(loginInfo[1]);
 		}
 		return false;

@@ -1,4 +1,4 @@
-package client; //TODO: move into logic namespace, so that it can be used between server and client APIs
+package client;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -7,6 +7,7 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.*;
 
 public class User implements Runnable {
 
@@ -31,40 +32,49 @@ public class User implements Runnable {
 	public String[] playerChanges = {";"," ","~"," ","~"," ","~"," ","~"," "};
 	public static String chatChanges = "";
 	Timer timer;
-	protected static Scanner scan;
+	protected static Scanner scan = null;
 
 	static List<String> outGoing = new ArrayList<String>();
 
-	public static void main(String args[]) {
-		API service;
+	public static void main(String[] args) {
+		API service = null;
 		String username = "";
-		String arg1;
-		String arg2;
 		scan = new Scanner(System.in);
 
 		try {
 			service = new API();
 
-			while(username.equals("")) {
+			boolean invalidInput = true;
+			while(invalidInput) {
+				// username...
 				System.out.print(View.UI_ENTER_USERNAME);
-				arg1 = scan.nextLine();
+				String arg1 = scan.nextLine();
 
+				//NOTE: this implicitly error checks for the delimiter ';'
+				if (!isValidUsernameStr(arg1)) {
+					System.out.print(View.UI_USERNAME_STR_ERROR);
+					continue;
+				}
+
+				// password...
 				System.out.print(View.UI_ENTER_PASSWORD);
-				arg2 = scan.nextLine();
+				String arg2 = scan.nextLine();
 
-				if(arg1.contains(";")||arg2.contains(";")) {
-					System.out.print(View.UI_SANTIZATION_ERROR);
+				//NOTE: this implicitly error checks for the delimiter ';'
+				if (!isValidPasswordStr(arg2)) {
+					System.out.print(View.UI_PASSWORD_STR_ERROR);
+					continue;
+				}
+
+				// credentials are now valid client side, but still must check if valid on server side...
+				// send to server and get validation string back
+				Message m = service.sendAndWait(new Message(arg1, arg2));
+				if (m.ok()) {
+					username = arg1;
+					System.out.println("Welcome " + username);
 				} else {
-					Message m = service.sendAndWait(new Message(arg1, arg2));
-					if(m.ok()) {
-						username = arg1;
-						System.out.println("Welcome " + username);
-					} else {
-						if(m.toString().equals("full"))
-							System.out.print(View.UI_FULL_ERROR);
-						else
-							System.out.print(View.UI_AUTH_ERROR);
-					}
+					if (m.toString().equals("full")) System.out.print(View.UI_FULL_ERROR); // table is full
+					else System.out.print(View.UI_AUTH_ERROR); // username does not exist on server or password is wrong
 				}
 			}
 
@@ -183,4 +193,47 @@ public class User implements Runnable {
 			outGoing = new ArrayList<String>();
 		}
 	}
+
+	// HELPERS...
+
+	//NOTE: "" returns false
+	private static boolean isAlphaNumeric(String s) {
+		if (null == s) return false;
+		if (!s.matches("^[a-zA-Z0-9]+$")) return false;
+		
+		return true;
+	}
+
+	private static boolean isValidUsernameStr(String s) {
+		// can't be null
+		if (null == s) return false;
+
+		// can't be empty
+		if (s.isEmpty()) return false;
+
+		// must be alpha-numeric
+		if (!isAlphaNumeric(s)) return false;
+
+		// must be >= 1 (already checked above) and <= max char limit
+		if (s.length() > View.NB_USERNAME_CHAR_LIMIT) return false;
+
+		return true;
+	}
+
+	private static boolean isValidPasswordStr(String s) {
+		// can't be null
+		if (null == s) return false;
+
+		// can't be empty
+		if (s.isEmpty()) return false;
+
+		// must be alpha-numeric
+		if (!isAlphaNumeric(s)) return false;
+
+		// must be >= 1 (already checked above) and <= max char limit
+		if (s.length() > View.NB_PASSWORD_CHAR_LIMIT) return false;
+
+		return true;
+	}
+
 }
