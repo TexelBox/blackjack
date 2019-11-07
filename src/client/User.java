@@ -11,12 +11,24 @@ import java.util.regex.*;
 
 public class User implements Runnable {
 
+	//TODO: right now state changes are event based, but later on in A4, I want to implement timers to automatically handle this
+	// The state will progress in this order and then loop back around
+	//NOTE: this might be better off moved into parser later, but keeping it here for now
+	public enum ServerState {
+		JOINING, // start server here, loop back here from dealer turn after ???? (what event to use for now) ????
+		BETTING, // get here from joining window, when 2 players have joined table
+		PLAYER_TURNS, // get here from betting window, when all players have bet
+		DEALER_TURN // get here from player turns window once turnID has now got back to dealer
+	}
+
 	//public enum UserType {
 	//	SPECTATOR, // default
 	//	PLAYER
 	//}
 
 	//public UserType userType = UserType.SPECTATOR; // client can check this type to error check over commands entered before sending to server
+
+	public static ServerState serverState = ServerState.JOINING;
 
 	public static String currentPlayerTurn = "0"; // this should never be null and only go from 0-4 (0 means dealer)
 	protected API service = null;

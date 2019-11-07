@@ -79,8 +79,9 @@ public class Parser {
 
 		// search in players list first...
 
-		//TODO: change this to be by index loop (for int i...)
-		for (User u : players) {
+		for (int i = 0; i < players.size(); ++i) {
+			User u = players.get(i);
+
 			if (null == u) continue;
 
 			// match...
@@ -89,9 +90,11 @@ public class Parser {
 					case "b":
 						// error 1 (not in betting window)
 						//TODO... (use timer state)
+						if (User.ServerState.BETTING != User.serverState) return false;
 						
 						// error 2 (in betting window, but already bet)
 						//TODO... (use timer state + check if u.bet != -1)
+						if (-1 != u.bet) return false;
 
 						int betVal = Integer.parseInt(state); // never an exception
 						// we know betVal is between 1 and 100
@@ -104,17 +107,25 @@ public class Parser {
 					case "h":
 						// error 1 (not in playerturns window)
 						//TODO... (use timer state)
+						if (User.ServerState.PLAYER_TURNS != User.serverState) return false;
 
 						// error 2 (in playerturns window, but not my turn)
-						//TODO... (use timer state + check User.turnID vs. user slot in table -> change for loop to be by index)
+						//TODO... (use timer state + check User.turnID vs. user slot in table
+						int currentTurnID = Integer.parseInt(User.currentPlayerTurn); // no exception should occur
+						int userTurnID = i+1;
+						if (currentTurnID != userTurnID) return false;
 
 						return true;
 					case "d":
 						// error 1 (not in playerturns window)
 						//TODO... (use timer state)
+						if (User.ServerState.PLAYER_TURNS != User.serverState) return false;
 
 						// error 2 (in playerturns window, but not my turn)
-						//TODO... (use timer state + check User.turnID vs. user slot in table -> change for loop to be by index)
+						//TODO... (use timer state + check User.turnID vs. user slot in table
+						int currentTurnID2 = Integer.parseInt(User.currentPlayerTurn); // no exception should occur
+						int userTurnID2 = i+1;
+						if (currentTurnID2 != userTurnID2) return false;
 
 						// error 3 (can't double-down when you have more than your first 2 cards)
 						if (u.cards.size() > 2) return false;
@@ -142,9 +153,18 @@ public class Parser {
 					case "j":
 						// error 1 (not in join window)
 						//TODO... (use timer state)
+						if (User.ServerState.JOINING != User.serverState) return false;
 
 						// error 2 (in join window, but table is full)
 						//TODO... (use timer state + check if no nulls in players)
+						boolean isFull = true;
+						for (User p : players) {
+							if (null == p) {
+								isFull = false;
+								break;
+							}
+						}
+						if (isFull) return false;
 
 						return true;
 					default:
