@@ -33,23 +33,30 @@ public class Parser {
 		this.players = Arrays.asList(p0, p1, p2, p3);
 	}
 
-	//TODO: have users become spectators first rather than players like it does here...
-	// do this, once timer windows are implemented
-	// setPlayer
+	//NOTE: i'm changing this to now put new connections in as spectators
+	// return -1 if server is full (number connected users (non-null spectators+players) == spectators.size())
 	public int setUser(String auth) {
-		// find an open spot on table if any...
-		for (int i = 0; i < players.size(); i++) {
-			if (players.get(i) == null) {
-				players.set(i, this.getUserInfo(auth.trim().split(":")[0]));
+		// check that server is not full...
+		// find number of connected users
+		int numConnectedUsers = 0;
+		for (User p : players) {
+			if (null != p) ++numConnectedUsers;
+		}
+		for (User s : spectators) {
+			if (null != s) ++numConnectedUsers;
+		}
+
+		if (numConnectedUsers == spectators.size()) return -1; // we full
+
+		// getting here means we can add user to spectators
+		for (int i = 0; i < spectators.size(); ++i) {
+			if (null == spectators.get(i)) {
+				spectators.set(i, getUserInfo(auth.trim().split(":")[0]));
 				return i;
 			}
-			if(i==2) {
-				// room is full because we are only supporting 2 players atm
-				//TODO: could we set them as spectator here?
-				return -1;
-			}
 		}
-		return -1;
+
+		return -1; // this should never happen, but we need it for compile
 	}
 
 	public User getUserInfo(String username) {

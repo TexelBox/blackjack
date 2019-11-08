@@ -120,6 +120,8 @@ public class API {
 							decoder.decode(inBuffer, cBuffer, false);
 							cBuffer.flip();
 							line = cBuffer.toString();
+
+							line = line.trim(); //NOTE: this is very important since client sends line over with an "\n" appended at end due to usint outBuffer.println, this was causing many errors with comparing strings like "Aaron\n" to "Aaron"
 							
 							System.out.print("TCP Client: " + line + "\n");
 
@@ -144,7 +146,7 @@ public class API {
 								// top-level is for specific cases (could be handled better), inner switch is for main protocol handling
 								switch(line) {
 									// initalizes the GUI
-									case "<<GUI>>\n":
+									case "<<GUI>>":
 										if (!gui.contains(socket)) gui.add(socket); // bind
 
 										socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
@@ -163,8 +165,10 @@ public class API {
 
 										if (this.parser.errorCheck(line)) {
 											this.parser.actionTaken(line); // update state
+											System.out.println("OK");
 											cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
 										} else {
+											System.out.println("NO");
 											cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
 										}
 								}
