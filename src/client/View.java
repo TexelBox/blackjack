@@ -217,9 +217,13 @@ public class View {
 		if (null != p3) balances[3] = getFixedLengthString("$" + String.valueOf(p3.balance), NB_BALANCE_FIELD_SIZE);
 
 
+		// for now, display the server state here...
+		String serverState = getFixedLengthString("STATE="+parser.serverState.name(), 18); //NOTE: if the enum types change names, then this will have to be updated
+		serverState = serverState.replaceAll(" ", "=");
+
 		//NOTE: wow, it's ugly...
 		String ui =
-          "|==============================================================================||;"
+          "|="+serverState+"===========================================================||;"
         + "|                                    "+turns[0]+"                                    ||;"
         + "|                                    DEALER                                    ||;"
         + "|                                   SCORE:"+scores[0]+"                                   ||;"
