@@ -133,16 +133,16 @@ public class User implements Runnable {
 
 				//NOTE: this looks really redundant and I could use fall-through cases here, but i'm leaving it like this so that each case could have different specific error msgs if needed
 				switch(cmdStr) {
-					case "/q":
-						if (1 == parts.length) {
-							// success, send to server
-							outGoing.add("q: :" + username);
-							// if "ok", call system.exit
-							// else, error msg
-						} else {
-							//error
-						}
-						break;
+					//case "/q":
+					//	if (1 == parts.length) {
+					//		// success, send to server
+					//		outGoing.add("q: :" + username);
+					//		// if "ok", call system.exit
+					//		// else, error msg
+					//	} else {
+					//		//error
+					//	}
+					//	break;
 					case "/j":
 						if (1 == parts.length) {
 							// success, send to server

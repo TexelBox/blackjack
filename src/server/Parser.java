@@ -33,6 +33,35 @@ public class Parser {
 		this.players = Arrays.asList(p0, p1, p2, p3);
 	}
 
+	public int getNumConnectedUsers() {
+
+		// players and spectators are disjoint ordered sets - 1 connected/authenticated user only ever exists in exactly 1 position in exactly 1 of {players} or {spectators}
+		// thus count the number of non-null spots in both sets
+
+		return getNumConnectedPlayers() + getNumConnectedSpectators();
+	}
+
+	public int getNumConnectedPlayers() {
+		int count = 0;
+
+		for (User p : players) {
+			if (null != p) ++count;
+		}
+
+		return count;
+	}
+
+	public int getNumConnectedSpectators() {
+		int count = 0;
+
+		for (User s : spectators) {
+			if (null != s) ++count;
+		}
+
+		return count;
+	}
+	
+
 	//NOTE: i'm changing this to now put new connections in as spectators
 	// return -1 if server is full (number connected users (non-null spectators+players) == spectators.size())
 	public int setUser(String auth) {
@@ -253,7 +282,7 @@ public class Parser {
 								players.set(j, new User(u.username, u.balance)); // copy only username and balance over to reset state
 								spectators.set(i, null);
 								//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-								if (j == 1) joiningToBetting(); // if 2 people have joined, go into betting window
+								if (getNumConnectedUsers() == 1 || j == 1) joiningToBetting(); // for now, solo play only if 1 client connected when you issue /j, otherwise if 2 people have joined, go into betting window
 								break;
 							}
 						}
@@ -275,8 +304,8 @@ public class Parser {
 						if (u.balance == 0) u.balance = 1;
 
 						//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-						//having exactly 2 players in current iteration of program
-						if (players.get(0).bet != -1 && players.get(1).bet != -1) bettingToPlayerTurns(); // if all 2 people have bet, go into playerturns window
+						//having exactly 1 or 2 players in current iteration of program
+						if (players.get(0).bet != -1 && (getNumConnectedPlayers() == 2 ? players.get(1).bet != -1 : true)) bettingToPlayerTurns(); // if all 1-2 people have bet, go into playerturns window
 						break;
 					}
 				}
