@@ -33,7 +33,7 @@ import client.View;
  */
 
 public class API {
-	public static int BUFFERSIZE = 32; //TODO: increase this to 96 or 128 (better), cause right now it cuts off chat messages and causes looping bugs
+	public static int BUFFERSIZE = 128; // currently must be greater than 97 (worst case for t:82charmsg:12charusername)
 	public static int TIMEOUT_LENGTH = 200;
 	public static List<Socket> gui = new ArrayList<Socket>();
 	public Parser parser = null;
