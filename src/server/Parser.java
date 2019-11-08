@@ -251,10 +251,12 @@ public class Parser {
 							// found first open spot...
 							if (null == players.get(j)) {
 								players.set(j, new User(u.username, u.balance)); // copy only username and balance over to reset state
+								spectators.set(i, null);
+								//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
+								if (j == 1) joiningToBetting(); // if 2 people have joined, go into betting window
 								break;
 							}
 						}
-						spectators.set(i, null);
 
 						break;
 					}
@@ -272,6 +274,9 @@ public class Parser {
 						// safety (special case is when balance has now gone down to 0, so to prevent deadlocks, we give them $1)
 						if (u.balance == 0) u.balance = 1;
 
+						//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
+						//having exactly 2 players in current iteration of program
+						if (players.get(0).bet != -1 && players.get(1).bet != -1) bettingToPlayerTurns(); // if all 2 people have bet, go into playerturns window
 						break;
 					}
 				}
@@ -295,7 +300,11 @@ public class Parser {
 							}
 						}
 
-						if (turnID == lastPlayerTurnID) turnID = 0; // loop back to dealer
+						if (turnID == lastPlayerTurnID) {
+							turnID = 0; // loop back to dealer
+							//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
+							playerTurnsToDealerTurn();
+						}
 						else ++turnID;
 
 						User.currentPlayerTurn = String.valueOf(turnID);
@@ -333,7 +342,11 @@ public class Parser {
 								}
 							}
 
-							if (turnID == lastPlayerTurnID) turnID = 0; // loop back to dealer
+							if (turnID == lastPlayerTurnID) {
+								turnID = 0; // loop back to dealer
+								//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
+								playerTurnsToDealerTurn();
+							}
 							else ++turnID;
 
 							User.currentPlayerTurn = String.valueOf(turnID);
@@ -377,7 +390,11 @@ public class Parser {
 							}
 						}
 
-						if (turnID == lastPlayerTurnID) turnID = 0; // loop back to dealer
+						if (turnID == lastPlayerTurnID) {
+							turnID = 0; // loop back to dealer
+							//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
+							playerTurnsToDealerTurn();
+						}
 						else ++turnID;
 
 						User.currentPlayerTurn = String.valueOf(turnID);
@@ -392,5 +409,169 @@ public class Parser {
 		}
 		
 	}
+
+
+	//STATE CHANGERS (TRANSITION EVENTS)...
+
+	private void joiningToBetting() {
+		if (ServerState.JOINING != serverState) return;
+
+		// nothing extra?
+
+		serverState = ServerState.BETTING;
+	}
+
+	private void bettingToPlayerTurns() {
+		if (ServerState.BETTING != serverState) return;
+
+		// reset deck to full 52 and sorted
+		Card.resetDeck();
+		// shuffle deck
+		Card.shuffleCards();
+
+		// deal cards to everyone...
+		//User.dealersCards.clear(); // safety
+		User.dealersCards.add(Card.deckOfCards.pop()); // 1 face up card to dealer
+		User.dealersCards.add("??"); // 1 symbolic hole card (face-down)
+		User.dealerScore = 0; // 0 means ??
+
+		// each player at table gets dealt hand (2 face-up cards)
+		for (User p : players) {
+			if (null != p) {
+				//p.cards.clear(); // safety
+				p.cards.add(Card.deckOfCards.pop());
+				p.cards.add(Card.deckOfCards.pop());
+				p.updateScore();
+			} 
+		}
+		
+		// give turn to player 1 (will always be sitting at rightmost spot (spot 1) on table since we add players to table from right to left)
+		User.currentPlayerTurn = "1";
+
+		serverState = ServerState.PLAYER_TURNS;
+	}
+
+	//NOTE: this method might be broken up if another state is added
+	private void playerTurnsToDealerTurn() {
+		if (ServerState.PLAYER_TURNS != serverState) return;
+
+		// dealer follows his rules to get the rest of his hand...
+		//NOTE: FOR THIS VERSION OF OUR APPLICATION, WE AREN"T ANIMATING THE DEALER'S MOVES SO WE CAN JUST CALCULATE ALL THEIR MOVES IN ONE AND SEND DURING THIS FRAME AS WELL...
+		//OUR DEALER RULES: if a dealer gets to 17-21 (soft or hard), they must STAND. Dealer can only bust on a hard hand. e.g. a soft hand of A,2,10 = 13 not a bust of 23. Dealer must hit whenever <= 16
+
+		// first off, replace the hole (face-down) card with a real card from deck...
+		User.dealersCards.set(1, Card.deckOfCards.pop()); // must do this before calculating score since the "??" will throw exception
+		boolean isHardHand = User.updateDealerScore(); // change score of ?? to an int
+
+		// 1-16 (soft or hard) is a hit
+		// 17-21 (soft or hard) is a stand
+		// can only bust on hard hand (forces a stand)
+		while(User.dealerScore <= 16) {
+			// hit
+			User.dealersCards.add(Card.deckOfCards.pop());
+			isHardHand = User.updateDealerScore();
+		}
+
+		// WIN CONDITIONS + PAYOUTS (since everyone on table now has final cards and final score)...
+		// now we evaluate the...
+		// WIN CONDITIONS...
+		// BJACK = WON, PUSH, LOST = BUST
+		// each player faces dealer
+		// if player has BLACKJACK (A+T/J/Q/K) they WIN unless dealer also has BLACKJACK which results in a PUSH
+		// BLACKJACK beats out any other 21 point hand
+		// if neither player nor dealer busted, highest hand WIN, lowest hand LOSE otherwise PUSH
+		// if player busts, they LOSE no matter what dealer does (even BUST themself)
+		//NOTE: currently treating a blackjack win as paying the same amount as a standard value win (but, few casinos pay 2-1 for blackjack, but then the odds are better for the player)
+
+		// compare each player to dealer, update their result + pay them if (BJACK, WON, PUSH)
+		//NOTE: the logic here could probably be simplified, but I believe all cases are covered
+		for (User p : players) {
+			if (null == p) continue;
+
+			if (p.score > 21) { // player bust
+				p.result = User.Result.BUST;
+				// no update to balance, they have already lost money since their bet was on the table - round was net loss of bet
+			} else if (p.score == 21 && p.cards.size() == 2) { // player BJACK
+				if (User.dealerScore == 21 && User.dealersCards.size() == 2) { // dealer BJACK
+					p.result = User.Result.PUSH;
+					// update balance (player gets their bet back) - round was net gain of 0
+					p.balance += p.bet;
+					// safety (clamp max balance, just in case)
+					if (p.balance > 9999999) p.balance = 9999999;
+				} else { // dealer doesn't have blackjack, and thus a player blackjack beats any other hand
+					p.result = User.Result.BJACK;
+					// update balance (player gets their bet back + dealer pays them their bet value) - round was net gain of bet
+					p.balance += 2*p.bet;
+					// safety (clamp max balance, just in case)
+					if (p.balance > 9999999) p.balance = 9999999;
+				}
+			} else { // player has normal hand (1-21) w/ 3+ cards
+				if (User.dealerScore > 21) { // dealer bust
+					p.result = User.Result.WON;
+					// update balance (player gets their bet back + dealer pays them their bet value) - round was net gain of bet
+					p.balance += 2*p.bet;
+					// safety (clamp max balance, just in case)
+					if (p.balance > 9999999) p.balance = 9999999;
+				} else if (User.dealerScore == 21 && User.dealersCards.size() == 2) { // dealer BJACK
+					p.result = User.Result.LOST;
+					// no update to balance, they have already lost money since their bet was on the table - round was net loss of bet
+				} else { // dealer has normal hand (1-21) w/ 3+ cards
+					// highest score wins, otherwise a push (NOTE: number of cards is not a factor)
+					if (p.score > User.dealerScore) {
+						p.result = User.Result.WON;
+						// update balance (player gets their bet back + dealer pays them their bet value) - round was net gain of bet
+						p.balance += 2*p.bet;
+						// safety (clamp max balance, just in case)
+						if (p.balance > 9999999) p.balance = 9999999;
+					} else if (p.score == User.dealerScore) {
+						p.result = User.Result.PUSH;
+						// update balance (player gets their bet back) - round was net gain of 0
+						p.balance += p.bet;
+						// safety (clamp max balance, just in case)
+						if (p.balance > 9999999) p.balance = 9999999;
+					} else {
+						p.result = User.Result.LOST;
+						// no update to balance, they have already lost money since their bet was on the table - round was net loss of bet
+					}
+				}
+			}
+
+			p.bet = -1; // clear bet from table
+		}
+
+		serverState = ServerState.DEALER_TURN;
+	}
+
+	// UNUSED atm
+	private void dealerTurnToJoining() {
+		if (ServerState.PLAYER_TURNS != serverState) return;
+
+		// clear table...
+		// move players into spectators list
+		for (int i = 0; i < players.size(); ++i) {
+			User p = players.get(i);
+			if (null == p) continue;
+
+			// find open spot...
+			for (int j = 0; j < spectators.size(); ++j) {
+				User s = spectators.get(j);
+				if (null == s) {
+					spectators.set(j, new User(p.username, p.balance));
+					players.set(i, null);
+					break;
+				}
+			}
+		}
+
+		//TODO: assert that player's list is now all nulls
+		//if somehow there were more users on server than spectator list size, then the above wouldn't be able to move all players over and they would be stuck as players (slightly better bug than being wiped from state completely)
+
+		User.resetStatics();
+
+		Card.resetDeck(); // put cards back into deck
+
+		serverState = ServerState.JOINING;
+	}
+
 
 }

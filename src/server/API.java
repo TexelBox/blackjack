@@ -69,7 +69,6 @@ public class API {
 
 		// Wait for something happen among all registered sockets
 		try {
-			Dealer.dealerPlay(); //TODO: move this away
 			boolean terminated = false;
 			while (!terminated) {
 
@@ -124,8 +123,6 @@ public class API {
 							line = line.trim(); //NOTE: this is very important since client sends line over with an "\n" appended at end due to usint outBuffer.println, this was causing many errors with comparing strings like "Aaron\n" to "Aaron"
 							
 							System.out.print("TCP Client: " + line + "\n");
-
-							//System.out.print("TCP Client: " + line + "====" + this.parser.lineToParserInput(line) + "\n");
 
 							// AUTH...
 							// special case that im extracting to here

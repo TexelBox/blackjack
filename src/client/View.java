@@ -78,6 +78,12 @@ public class View {
 		// assuming exactly 1 turn indicator on the table (turn field will only ever be 0,1,2,3 or 4)
 		turns[Integer.parseInt(User.currentPlayerTurn)] = "(TURN)";
 
+		// 2.5 results...
+		if (null != p0 && User.Result.NONE != p0.result) turns[1] = getFixedLengthString(p0.result.name(), 6);
+		if (null != p1 && User.Result.NONE != p1.result) turns[2] = getFixedLengthString(p1.result.name(), 6);
+		if (null != p2 && User.Result.NONE != p2.result) turns[3] = getFixedLengthString(p2.result.name(), 6);
+		if (null != p3 && User.Result.NONE != p3.result) turns[4] = getFixedLengthString(p3.result.name(), 6);
+
 		// 3. scores...
 
 		// init...

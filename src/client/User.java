@@ -11,6 +11,17 @@ import java.util.regex.*;
 
 public class User implements Runnable {
 
+	public enum Result {
+		NONE,
+		BJACK,
+		WON,
+		PUSH,
+		LOST,
+		BUST
+	}
+
+	public Result result = Result.NONE;
+
 	//public enum UserType {
 	//	SPECTATOR, // default
 	//	PLAYER
@@ -28,7 +39,7 @@ public class User implements Runnable {
 	public LinkedList<String> cards = new LinkedList<String>();
 	public static LinkedList<String> dealersCards = new LinkedList<String>();
 	public static LinkedList<String> chatbox = new LinkedList<String>();
-	public static String DealerCardChanges;
+	//public static String DealerCardChanges;
 	//public String[] playerChanges = {";"," ","~"," ","~"," ","~"," ","~"," "};
 	//public static String chatChanges = "";
 	Timer timer;
@@ -242,6 +253,7 @@ public class User implements Runnable {
 
 
 	// this should be fixed, but its untested...
+	// for players...
 	public int updateScore() {
 		int tempScore = 0;
 		int acesRemaining = 0; // must add aces last
@@ -276,6 +288,50 @@ public class User implements Runnable {
 		score = tempScore; // update player's score
 		return score;
 	}
+
+
+	// for DEALER...
+	// return true if hand is hard (all aces are 1 if any)
+	// return false if hand is soft (exists an ace as 11)
+	public static boolean updateDealerScore() {
+		int tempScore = 0;
+		int acesRemaining = 0; // must add aces last
+
+		for (String card : dealersCards) {
+			int value = 0;
+			switch(card.charAt(0)) {
+				case 'A':
+					++acesRemaining;
+					break;
+				case 'T':
+				case 'J':
+				case 'Q':
+				case 'K':
+					value = 10;
+					break;
+				default:
+					// we have 2-9...
+					value = Integer.parseInt(card.substring(0, 1)); // no exception
+			}
+			tempScore += value;
+		}
+
+		int numSoftAces = acesRemaining; // assume all aces will be soft 11
+		// handle aces now...
+		while (acesRemaining > 0) {
+			tempScore += 11; // first treat as soft 11
+			// if this causes a bust...
+			if (tempScore > 21) {
+				tempScore -= 10; // now treat as hard 1 (11-10) 
+				--numSoftAces;
+			}
+			--acesRemaining;
+		}
+
+		dealerScore = tempScore; // update dealer's score
+		return numSoftAces == 0;
+	}
+
 
 
 	// test user
