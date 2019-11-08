@@ -241,42 +241,41 @@ public class User implements Runnable {
 	}
 
 
+	// this should be fixed, but its untested...
+	public int updateScore() {
+		int tempScore = 0;
+		int acesRemaining = 0; // must add aces last
 
-
-
-	//TODO: remove the param and just use 'this'...
-	//TODO: this also doesn't work with say "AAK" which will wrongly be 22
-	public int calcScore(User temp) {
-		temp.score = 0;
-		for(int i = 0;i < temp.cards.size();i++) {
-			try {
-				// if(temp.cards.get(i).substring(0, 1).equals("1")) {
-					// temp.score += 10;
-				// }else {
-					temp.score = temp.score + Integer.parseInt(temp.cards.get(i).substring(0, 1));
-				// }
-			//This is in case of a Ace jack king or queen
-			}catch(Exception e) {
-				if(temp.cards.get(i).substring(0,1).equals("A")) {
-					if(temp.score < 11) {
-						temp.score += 11;
-					}else {
-						temp.score += 1;
-					}
-				}if(temp.cards.get(i).substring(0,1).equals("Q")
-						|| temp.cards.get(i).substring(0,1).equals("K")
-						|| temp.cards.get(i).substring(0,1).equals("J")
-						|| temp.cards.get(i).substring(0,1).equals("T")) {
-					temp.score += 10;
-				}
-
+		for (String card : cards) {
+			int value = 0;
+			switch(card.charAt(0)) {
+				case 'A':
+					++acesRemaining;
+					break;
+				case 'T':
+				case 'J':
+				case 'Q':
+				case 'K':
+					value = 10;
+					break;
+				default:
+					// we have 2-9...
+					value = Integer.parseInt(card.substring(0, 1)); // no exception
 			}
+			tempScore += value;
 		}
-		return temp.score;
+
+		// handle aces now...
+		while (acesRemaining > 0) {
+			tempScore += 11; // first treat as soft 11
+			// if this causes a bust...
+			if (tempScore > 21) tempScore -= 10; // now treat as hard 1 (11-10) 
+			--acesRemaining;
+		}
+
+		score = tempScore; // update player's score
+		return score;
 	}
-
-
-
 
 
 	// test user

@@ -307,7 +307,7 @@ public class Parser {
 					if (username.equals(u.username)) {
 
 						u.cards.add(Card.deckOfCards.pop()); //NOTE: you will never run out of cards with just 4 players and 1 deck
-						u.calcScore(u); // updates score
+						u.updateScore(); // updates score
 
 						//TODO: right now, i'm not gonna put the auto-stand in for when a player has reached 21, cause i'd also have to add in logic for if they have 21 on their first 2 cards (could do this later)
 						
@@ -355,7 +355,7 @@ public class Parser {
 						// 2. deal another final card and update score
 
 						u.cards.add(Card.deckOfCards.pop()); //NOTE: you will never run out of cards with just 4 players and 1 deck
-						u.calcScore(u); // updates score
+						u.updateScore(); // updates score
 
 						// 3. automatically stand (pass turn along)
 
