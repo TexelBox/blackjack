@@ -6,11 +6,23 @@ import client.User;
 //import client.User.UserType;
 
 public class Parser {
+
+	//TODO: right now state changes are event based, but later on in A4, I want to implement timers to automatically handle this
+	// The state will progress in this order and then loop back around
+	public enum ServerState {
+		JOINING, // start server here, loop back here from dealer turn after ???? (what event to use for now) ????
+		BETTING, // get here from joining window, when 2 players have joined table
+		PLAYER_TURNS, // get here from betting window, when all players have bet
+		DEALER_TURN // get here from player turns window once turnID has now got back to dealer
+	}
+
 	protected static final List<String> usernames = Arrays.asList("Aaron", "Amir", "Dom", "Elvin");
 	protected static final List<String> passwords = Arrays.asList("1","2","3","4");
 	protected static final List<Integer> balances = Arrays.asList(1,9999999,300,400); // min = $1, max = $9999999
 	protected List<User> players = Arrays.asList(null, null, null, null); // players at the table
 	protected List<User> spectators = Arrays.asList(null, null, null, null, null); // spectators (between rounds this needs to be able to hold everyone connected)
+
+	public ServerState serverState = ServerState.JOINING;
 
 	Parser() { 
 
@@ -90,7 +102,7 @@ public class Parser {
 					case "b":
 						// error 1 (not in betting window)
 						//TODO... (use timer state)
-						if (User.ServerState.BETTING != User.serverState) return false;
+						if (ServerState.BETTING != serverState) return false;
 						
 						// error 2 (in betting window, but already bet)
 						//TODO... (use timer state + check if u.bet != -1)
@@ -107,7 +119,7 @@ public class Parser {
 					case "h":
 						// error 1 (not in playerturns window)
 						//TODO... (use timer state)
-						if (User.ServerState.PLAYER_TURNS != User.serverState) return false;
+						if (ServerState.PLAYER_TURNS != serverState) return false;
 
 						// error 2 (in playerturns window, but not my turn)
 						//TODO... (use timer state + check User.turnID vs. user slot in table
@@ -119,7 +131,7 @@ public class Parser {
 					case "d":
 						// error 1 (not in playerturns window)
 						//TODO... (use timer state)
-						if (User.ServerState.PLAYER_TURNS != User.serverState) return false;
+						if (ServerState.PLAYER_TURNS != serverState) return false;
 
 						// error 2 (in playerturns window, but not my turn)
 						//TODO... (use timer state + check User.turnID vs. user slot in table
@@ -153,7 +165,7 @@ public class Parser {
 					case "j":
 						// error 1 (not in join window)
 						//TODO... (use timer state)
-						if (User.ServerState.JOINING != User.serverState) return false;
+						if (ServerState.JOINING != serverState) return false;
 
 						// error 2 (in join window, but table is full)
 						//TODO... (use timer state + check if no nulls in players)
