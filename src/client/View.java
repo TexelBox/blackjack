@@ -227,9 +227,22 @@ public class View {
 		String serverState = getFixedLengthString("STATE="+parser.serverState.name(), 18); //NOTE: if the enum types change names, then this will have to be updated
 		serverState = serverState.replaceAll(" ", "=");
 
+		// also display the timers here...
+		long serverUptimeMillis = parser.getServerUptimeMillis();
+		// clamp for UI only...
+		final long maxDisplayedUptime = 99999999999999L; // good for ~3170 years! (14 digits)
+		if (serverUptimeMillis > maxDisplayedUptime) serverUptimeMillis = maxDisplayedUptime;
+		long timeLeftOnTimerMillis = parser.getTimeLeftOnTimerMillis();
+
+		long timeLeftOnTimerSeconds = (long) Math.ceil((double) timeLeftOnTimerMillis / 1000);
+
+		String uptime = getFixedLengthString(String.valueOf(serverUptimeMillis), 14);
+		String timer = getFixedLengthString(String.valueOf(timeLeftOnTimerSeconds), 2);
+
+		
 		//NOTE: wow, it's ugly...
 		String ui =
-          "|="+serverState+"===========================================================||;"
+          "|="+serverState+"===UPTIME(ms)="+uptime+"===TIMER(s)="+timer+"=================||;"
         + "|                                    "+turns[0]+"                                    ||;"
         + "|                                    DEALER                                    ||;"
         + "|                                   SCORE:"+scores[0]+"                                   ||;"

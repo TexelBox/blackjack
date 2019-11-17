@@ -24,6 +24,10 @@ public class Parser {
 
 	public ServerState serverState = ServerState.JOINING;
 
+	// both times in milliseconds
+	private long serverUptimeMillis = 0;
+	private long timeLeftOnTimerMillis = 10000;
+
 	Parser() { 
 
 	}
@@ -32,6 +36,9 @@ public class Parser {
 	public Parser(User p0, User p1, User p2, User p3) {
 		this.players = Arrays.asList(p0, p1, p2, p3);
 	}
+
+	public long getServerUptimeMillis() { return serverUptimeMillis; }
+	public long getTimeLeftOnTimerMillis() { return timeLeftOnTimerMillis; }
 
 	public int getNumConnectedUsers() {
 
@@ -137,11 +144,9 @@ public class Parser {
 				switch(cmd) {
 					case "b":
 						// error 1 (not in betting window)
-						//TODO... (use timer state)
 						if (ServerState.BETTING != serverState) return false;
 						
 						// error 2 (in betting window, but already bet)
-						//TODO... (use timer state + check if u.bet != -1)
 						if (-1 != u.bet) return false;
 
 						int betVal = Integer.parseInt(state); // never an exception
@@ -154,11 +159,9 @@ public class Parser {
 					case "s":
 					case "h":
 						// error 1 (not in playerturns window)
-						//TODO... (use timer state)
 						if (ServerState.PLAYER_TURNS != serverState) return false;
 
 						// error 2 (in playerturns window, but not my turn)
-						//TODO... (use timer state + check User.turnID vs. user slot in table
 						int currentTurnID = Integer.parseInt(User.currentPlayerTurn); // no exception should occur
 						int userTurnID = i+1;
 						if (currentTurnID != userTurnID) return false;
@@ -166,11 +169,9 @@ public class Parser {
 						return true;
 					case "d":
 						// error 1 (not in playerturns window)
-						//TODO... (use timer state)
 						if (ServerState.PLAYER_TURNS != serverState) return false;
 
 						// error 2 (in playerturns window, but not my turn)
-						//TODO... (use timer state + check User.turnID vs. user slot in table
 						int currentTurnID2 = Integer.parseInt(User.currentPlayerTurn); // no exception should occur
 						int userTurnID2 = i+1;
 						if (currentTurnID2 != userTurnID2) return false;
@@ -200,11 +201,9 @@ public class Parser {
 						return true; // spectators can quit (logout) at any time (i think?)
 					case "j":
 						// error 1 (not in join window)
-						//TODO... (use timer state)
 						if (ServerState.JOINING != serverState) return false;
 
 						// error 2 (in join window, but table is full)
-						//TODO... (use timer state + check if no nulls in players)
 						boolean isFull = true;
 						for (User p : players) {
 							if (null == p) {
@@ -281,8 +280,6 @@ public class Parser {
 							if (null == players.get(j)) {
 								players.set(j, new User(u.username, u.balance)); // copy only username and balance over to reset state
 								spectators.set(i, null);
-								//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-								if (getNumConnectedUsers() == 1 || j == 1) joiningToBetting(); // for now, solo play only if 1 client connected when you issue /j, otherwise if 2 people have joined, go into betting window
 								break;
 							}
 						}
@@ -302,47 +299,18 @@ public class Parser {
 						u.balance -= u.bet;
 						// safety (special case is when balance has now gone down to 0, so to prevent deadlocks, we give them $1)
 						if (u.balance == 0) u.balance = 1;
-
-						//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-						//having exactly 1 or 2 players in current iteration of program
-						if (players.get(0).bet != -1 && (getNumConnectedPlayers() == 2 ? players.get(1).bet != -1 : true)) bettingToPlayerTurns(); // if all 1-2 people have bet, go into playerturns window
+						
 						break;
 					}
 				}
-
 				break;
 			case "s":
 				// we know a current player issued this string duing playerturns window and it's their turn
-				for (User u : players) {
-					if (null == u) continue;
-		
-					// match...
-					if (username.equals(u.username)) {
-						int turnID = Integer.parseInt(User.currentPlayerTurn); // never an exception here
-						
-						int lastPlayerTurnID = 4; // assume a full table until proven wrong
-						for (int i = 0; i < players.size(); ++i) {
-							// since players is "sorted" by having nulls at the back, find the first null
-							if (null == players.get(i)) {
-								lastPlayerTurnID = i;
-								break;
-							}
-						}
-
-						if (turnID == lastPlayerTurnID) {
-							turnID = 0; // loop back to dealer
-							//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-							playerTurnsToDealerTurn();
-						}
-						else ++turnID;
-
-						User.currentPlayerTurn = String.valueOf(turnID);
-
-						break;
-					}
-				}
-
+				// don't need to update anything about this player, so we don't have to locate them
+				// just jump to the next turn...
+				nextTurn();
 				break;
+			//TODO: in h/d could just access the user by the currentPlayerTurn index rather than looping to find them 
 			case "h":
 				// we know a current player issued this string duing playerturns window and it's their turn
 				for (User u : players) {
@@ -355,36 +323,18 @@ public class Parser {
 						u.updateScore(); // updates score
 
 						//TODO: right now, i'm not gonna put the auto-stand in for when a player has reached 21, cause i'd also have to add in logic for if they have 21 on their first 2 cards (could do this later)
+						// also, you could try your luck and double-down to hit a T/J/Q/K to still have a 21 (but with worse value that a blackjack 21) and potentially still beat the dealer, but get more money...
 						
 						// if this hit caused a BUST...
 						if (u.score > 21) {
 							// this also reacts like they have automatically standed (pass turn along)
-
-							int turnID = Integer.parseInt(User.currentPlayerTurn); // never an exception here
-						
-							int lastPlayerTurnID = 4; // assume a full table until proven wrong
-							for (int i = 0; i < players.size(); ++i) {
-								// since players is "sorted" by having nulls at the back, find the first null
-								if (null == players.get(i)) {
-									lastPlayerTurnID = i;
-									break;
-								}
-							}
-
-							if (turnID == lastPlayerTurnID) {
-								turnID = 0; // loop back to dealer
-								//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-								playerTurnsToDealerTurn();
-							}
-							else ++turnID;
-
-							User.currentPlayerTurn = String.valueOf(turnID);
-						} 
-
+							nextTurn();
+						} else {
+							nextSubTurn(); // didn't bust? well stay on player
+						}
 						break;
 					}
 				}
-
 				break;
 			case "d":
 				// we know a current player issued this string duing playerturns window and it's their turn, they are on their first 2 cards and they can afford the double bet
@@ -407,51 +357,39 @@ public class Parser {
 						u.updateScore(); // updates score
 
 						// 3. automatically stand (pass turn along)
-
-						int turnID = Integer.parseInt(User.currentPlayerTurn); // never an exception here
-					
-						int lastPlayerTurnID = 4; // assume a full table until proven wrong
-						for (int i = 0; i < players.size(); ++i) {
-							// since players is "sorted" by having nulls at the back, find the first null
-							if (null == players.get(i)) {
-								lastPlayerTurnID = i;
-								break;
-							}
-						}
-
-						if (turnID == lastPlayerTurnID) {
-							turnID = 0; // loop back to dealer
-							//HACK FOR NOW (MOVE THIS TO TIMER BASED LATER)...
-							playerTurnsToDealerTurn();
-						}
-						else ++turnID;
-
-						User.currentPlayerTurn = String.valueOf(turnID);
-						
+						nextTurn();
 						break;
 					}
 				}
-
 				break;
 			default:
 				System.out.println("ERROR: Parser.java - invalid action taken (this should never occur)");
 		}
-		
 	}
 
 
 	//STATE CHANGERS (TRANSITION EVENTS)...
 
+	//TODO: probably won't be handling client crashes (we would have to make sure their User becomes null and doesn't interrupt the state - e.g. if 1 player has joined, the timer can start ticking down, but then they crash, become null and we should stop or reset this timer)
+
 	private void joiningToBetting() {
 		if (ServerState.JOINING != serverState) return;
 
-		// nothing extra?
+		// INIT BETTING WINDOW...
 
 		serverState = ServerState.BETTING;
+		timeLeftOnTimerMillis = 10000; //TODO: use constant
 	}
 
 	private void bettingToPlayerTurns() {
 		if (ServerState.BETTING != serverState) return;
+
+		// safety timeout handling (on timeout, players who haven't bet will be given an auto-bet of the minimum $1 since everyone can always bet this amount regardless of their balance)
+		for (User p : players) {
+			if (null != p && -1 == p.bet) p.bet = 1;
+		}
+
+		// INIT PLAYER_TURNS WINDOW...
 
 		// reset deck to full 52 and sorted
 		Card.resetDeck();
@@ -478,6 +416,37 @@ public class Parser {
 		User.currentPlayerTurn = "1";
 
 		serverState = ServerState.PLAYER_TURNS;
+		timeLeftOnTimerMillis = 10000; //TODO: use constant
+	}
+
+	// still on the same player
+	private void nextSubTurn() {
+		timeLeftOnTimerMillis = 10000; //TODO: use constant
+	}
+
+	// move to next player over (or dealer)
+	private void nextTurn() {
+		int turnID = Integer.parseInt(User.currentPlayerTurn); // never an exception here
+		
+		int lastPlayerTurnID = 4; // assume a full table until proven wrong
+		for (int i = 0; i < players.size(); ++i) {
+			// since players is "sorted" by having nulls at the back, find the first null
+			if (null == players.get(i)) {
+				lastPlayerTurnID = i;
+				break;
+			}
+		}
+
+		if (turnID == lastPlayerTurnID) {
+			// loop back to dealer
+			User.currentPlayerTurn = "0";
+			playerTurnsToDealerTurn();
+		} else {
+			// move to next human player
+			++turnID;
+			User.currentPlayerTurn = String.valueOf(turnID);
+			nextSubTurn();
+		}
 	}
 
 	//NOTE: this method might be broken up if another state is added
@@ -569,11 +538,11 @@ public class Parser {
 		}
 
 		serverState = ServerState.DEALER_TURN;
+		timeLeftOnTimerMillis = 10000; //TODO: use constant
 	}
 
-	// UNUSED atm
 	private void dealerTurnToJoining() {
-		if (ServerState.PLAYER_TURNS != serverState) return;
+		if (ServerState.DEALER_TURN != serverState) return;
 
 		// clear table...
 		// move players into spectators list
@@ -600,7 +569,41 @@ public class Parser {
 		Card.resetDeck(); // put cards back into deck
 
 		serverState = ServerState.JOINING;
+		timeLeftOnTimerMillis = 10000; //TODO: use constant
 	}
 
+
+	// timestep in milliseconds
+	public void tickTimer(long deltaTimeMillis) {
+		serverUptimeMillis += deltaTimeMillis;
+		timeLeftOnTimerMillis -= deltaTimeMillis;
+
+		if (ServerState.JOINING == serverState) {
+			// don't tick down timer if we have no players joined yet...
+			if (getNumConnectedPlayers() == 0) timeLeftOnTimerMillis = 10000; //TODO: use constant (make sure its the dealer->join time)
+		}
+		
+		// timeout occurs!
+		if (timeLeftOnTimerMillis <= 0) {
+			timeLeftOnTimerMillis = 0; // clamp
+
+			switch(serverState) {
+				case JOINING:
+					joiningToBetting();
+					break;
+				case BETTING:
+					bettingToPlayerTurns();
+					break;
+				case PLAYER_TURNS:
+					nextTurn(); //NOTE: the only way this timeout occurs is if player doesn't issue a s/h/d command in their time window (thus, we treat it as if they issued a /s (stand))
+					break;
+				case DEALER_TURN:
+					dealerTurnToJoining();
+					break;
+				default: // impossible
+
+			}
+		}
+	}
 
 }

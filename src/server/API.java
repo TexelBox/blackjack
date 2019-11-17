@@ -37,9 +37,11 @@ public class API {
 	public static int TIMEOUT_LENGTH = 200;
 	public static List<Socket> gui = new ArrayList<Socket>();
 	public Parser parser = null;
+	private long serverCurrentTimeMillis = 0;
 
-	public API() throws Exception {
+	public API(long serverStartTimeMillis) throws Exception {
 		this.parser = new Parser();
+		serverCurrentTimeMillis = serverStartTimeMillis;
 		System.out.println("Welcome to blackjack");
 
 		// Initialize buffers and coders for channel receive and send
@@ -71,6 +73,8 @@ public class API {
 		try {
 			boolean terminated = false;
 			while (!terminated) {
+
+				//TODO: change this so all guis only update at end of frame
 
 				if (selector.select(TIMEOUT_LENGTH) < 0) {
 					System.out.println("select() failed");
@@ -188,6 +192,19 @@ public class API {
 						}
 					}
 				} // end of while (readyItor.hasNext()) 
+
+				// end-of-frame (calculate frame's deltaTime)
+				long newTimeMillis = System.currentTimeMillis();
+				long deltaTimeMillis = newTimeMillis - serverCurrentTimeMillis;
+				serverCurrentTimeMillis = newTimeMillis;
+				parser.tickTimer(deltaTimeMillis);
+				
+				// update guis...
+				String UIState = View.getStateUI(this.parser);
+				for (Socket guiSocket : gui) {
+					guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
+				}
+
 			} // end of while (!terminated)
 		} catch (IOException e) {
 			System.out.println(e);
