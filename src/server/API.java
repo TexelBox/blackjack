@@ -61,7 +61,7 @@ public class API {
 		channel.configureBlocking(false);
 
 		// Get the port number and bind the socket
-		InetSocketAddress isa = new InetSocketAddress();
+		InetSocketAddress isa = new InetSocketAddress(portNum);
 		channel.socket().bind(isa);
 
 		// Register that the server selector is interested in connection requests
