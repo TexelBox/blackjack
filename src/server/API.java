@@ -75,13 +75,16 @@ public class API {
         URL myurl = new URL("http://cpsc441blackjack.web.app/");
         con = (HttpURLConnection) myurl.openConnection();
 
-        con.setDoOutput(true);
-        con.setRequestMethod("POST");
-        con.setRequestProperty("User-Agent", "Java client");
-		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		con.setDoOutput(true);
+		con.setInstanceFollowRedirects(false);
+		con.setRequestMethod("POST");
+		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
+		con.setRequestProperty("charset", "utf-8");
+		con.setUseCaches(false);
 		
 		try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
 			wr.write(("data=" + View.getStateUI(this.parser) + "\n").getBytes(StandardCharsets.UTF_8));
+			wr.close();
 		}
 
 		// Wait for something happen among all registered sockets
@@ -159,6 +162,12 @@ public class API {
 									for(Socket guiSocket: gui) {
 										guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + line.substring(3) + "\n")));
 									}
+
+									try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+										wr.write(("data=" + "<<TXT>>" + line.substring(3) + "\n").getBytes(StandardCharsets.UTF_8));
+										wr.close();
+									}
+
 									break;
 
 								case "/a ":
@@ -210,7 +219,8 @@ public class API {
 							}
 							
 					        try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-					            wr.write(("data=" + UIState + "\n").getBytes(StandardCharsets.UTF_8));
+								wr.write(("data=" + UIState + "\n").getBytes(StandardCharsets.UTF_8));
+								wr.close();
 					        }
 
 							// Echo the message back
