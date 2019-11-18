@@ -22,7 +22,7 @@ public class API {
 	BufferedReader inBuffer;
 
     public API() throws Exception {
-        clientSocket = new Socket("127.0.0.1", 9000);
+        clientSocket = new Socket("136.159.5.16", 80);
 
 		outBuffer = new PrintWriter(clientSocket.getOutputStream(), true);
         inBuffer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));      

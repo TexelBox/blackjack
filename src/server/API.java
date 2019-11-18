@@ -51,7 +51,7 @@ public class API {
 		CharBuffer cBuffer = null;
 		int bytesSent, bytesRecv;     // number of bytes sent or received
 
-		int portNum = 9000;
+		int portNum = 80;
 
 		// Initialize the selector
 		Selector selector = Selector.open();
@@ -61,7 +61,7 @@ public class API {
 		channel.configureBlocking(false);
 
 		// Get the port number and bind the socket
-		InetSocketAddress isa = new InetSocketAddress(portNum);
+		InetSocketAddress isa = new InetSocketAddress();
 		channel.socket().bind(isa);
 
 		// Register that the server selector is interested in connection requests
