@@ -72,7 +72,7 @@ public class API {
 		// Register that the server selector is interested in connection requests
 		channel.register(selector, SelectionKey.OP_ACCEPT);
         
-        URL myurl = new URL("https://cpsc441blackjack.web.app/");
+        URL myurl = new URL("http://cpsc441blackjack.web.app/");
         con = (HttpURLConnection) myurl.openConnection();
 
         con.setDoOutput(true);
