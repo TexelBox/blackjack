@@ -78,7 +78,11 @@ public class API {
         con.setDoOutput(true);
         con.setRequestMethod("POST");
         con.setRequestProperty("User-Agent", "Java client");
-        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+		
+		try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+			wr.write(("data=" + View.getStateUI(this.parser) + "\n").getBytes(StandardCharsets.UTF_8));
+		}
 
 		// Wait for something happen among all registered sockets
 		try {
