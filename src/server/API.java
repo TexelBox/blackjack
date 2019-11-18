@@ -51,7 +51,7 @@ public class API {
 		CharBuffer cBuffer = null;
 		int bytesSent, bytesRecv;     // number of bytes sent or received
 
-		int portNum = 80;
+		int portNum = 9000;
 
 		// Initialize the selector
 		Selector selector = Selector.open();
