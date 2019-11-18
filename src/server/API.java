@@ -1,9 +1,12 @@
 package server;
 
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.SelectionKey;
@@ -13,6 +16,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,6 +41,7 @@ public class API {
 	public static int TIMEOUT_LENGTH = 200;
 	public static List<Socket> gui = new ArrayList<Socket>();
 	public Parser parser;
+	private static HttpURLConnection con;
 
 	public API() throws Exception {
 		this.parser = new Parser();
@@ -66,6 +71,14 @@ public class API {
 
 		// Register that the server selector is interested in connection requests
 		channel.register(selector, SelectionKey.OP_ACCEPT);
+        
+        URL myurl = new URL("https://cpsc441blackjack.web.app/");
+        con = (HttpURLConnection) myurl.openConnection();
+
+        con.setDoOutput(true);
+        con.setRequestMethod("POST");
+        con.setRequestProperty("User-Agent", "Java client");
+        con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
 		// Wait for something happen among all registered sockets
 		try {
@@ -191,6 +204,10 @@ public class API {
 							for(Socket guiSocket: gui) {
 								guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n")));
 							}
+							
+					        try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+					            wr.write(("data=" + UIState + "\n").getBytes(StandardCharsets.UTF_8));
+					        }
 
 							// Echo the message back
 							bytesSent = inBuffer.position(); 
