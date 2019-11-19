@@ -43,6 +43,30 @@ public class API {
 	public Parser parser;
 	private static HttpURLConnection con;
 
+		
+	public void doHTTP(String input) {
+		try {
+			URL myurl = new URL("http://localhost:5001/cpsc441blackjack/us-central1/app");
+			con = (HttpURLConnection) myurl.openConnection();
+	
+			con.setDoOutput(true);
+			con.setInstanceFollowRedirects(false);
+			con.setRequestMethod("POST");
+			con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
+			con.setRequestProperty("charset", "utf-8");
+			con.setUseCaches(false);
+			
+			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+				wr.write(("data=" + input).getBytes(StandardCharsets.UTF_8));
+				System.out.println(con.getInputStream());
+			}
+			con.disconnect();
+
+		} catch(Exception e) {
+			System.out.println(e);
+		}
+	}
+
 	public API() throws Exception {
 		this.parser = new Parser();
 		System.out.println("Welcome to blackjack");
@@ -71,21 +95,8 @@ public class API {
 
 		// Register that the server selector is interested in connection requests
 		channel.register(selector, SelectionKey.OP_ACCEPT);
-        
-        URL myurl = new URL("http://cpsc441blackjack.web.app/");
-        con = (HttpURLConnection) myurl.openConnection();
 
-		con.setDoOutput(true);
-		con.setInstanceFollowRedirects(false);
-		con.setRequestMethod("POST");
-		con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
-		con.setRequestProperty("charset", "utf-8");
-		con.setUseCaches(false);
-		
-		try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-			wr.write(("data=" + View.getStateUI(this.parser) + "\n").getBytes(StandardCharsets.UTF_8));
-			wr.close();
-		}
+		doHTTP(View.getStateUI(this.parser));
 
 		// Wait for something happen among all registered sockets
 		try {
@@ -163,10 +174,7 @@ public class API {
 										guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + line.substring(3) + "\n")));
 									}
 
-									try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-										wr.write(("data=" + "<<TXT>>" + line.substring(3) + "\n").getBytes(StandardCharsets.UTF_8));
-										wr.close();
-									}
+									doHTTP("<<TXT>>" + line.substring(3));
 
 									break;
 
@@ -217,11 +225,7 @@ public class API {
 							for(Socket guiSocket: gui) {
 								guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n")));
 							}
-							
-					        try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
-								wr.write(("data=" + UIState + "\n").getBytes(StandardCharsets.UTF_8));
-								wr.close();
-					        }
+							doHTTP(UIState);
 
 							// Echo the message back
 							bytesSent = inBuffer.position(); 
