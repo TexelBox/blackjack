@@ -29,14 +29,20 @@ public class View {
 	public static final String UI_AUTH_ERROR = "Invalid credentials.\n";
 	public static final String UI_FULL_ERROR = "No more room for players.\n";
 	public static final String UI_COMMAND_ERROR = "\n\nPlease enter one of the following commands:\n";
+	public static final String UI_USERNAME_STR_ERROR = "Invalid username string. Must be alpha-numeric and between 1 and 12 characters.\n";
+	public static final String UI_PASSWORD_STR_ERROR = "Invalid password string. Must be alpha-numeric and between 1 and 32 characters.\n";
+
 
 	public static final int NB_CHATBOX_LINES = 24;
 	public static final int NB_CHATBOX_LINE_WIDTH = 96;
 	public static final int NB_CHATBOX_MSG_CHAR_LIMIT = 82;
 	public static final int NB_USERNAME_CHAR_LIMIT = 12;
+	public static final int NB_PASSWORD_CHAR_LIMIT = 32;
 	public static final int NB_TURN_FIELD_SIZE = 6;
 	public static final int NB_SCORE_FIELD_SIZE = 2;
 	public static final int NB_BET_FIELD_SIZE = 4;
+	public static final int NB_BET_MIN_VALUE = 1;
+	public static final int NB_BET_MAX_VALUE = 100; // $100 on /b, but a /d can increase it to $200
 	public static final int NB_MAX_CARDS_IN_HAND = 12;
 	public static final int NB_BALANCE_FIELD_SIZE = 8;
 
@@ -71,6 +77,12 @@ public class View {
 		// overwrite...
 		// assuming exactly 1 turn indicator on the table (turn field will only ever be 0,1,2,3 or 4)
 		turns[Integer.parseInt(User.currentPlayerTurn)] = "(TURN)";
+
+		// 2.5 results...
+		if (null != p0 && User.Result.NONE != p0.result) turns[1] = getFixedLengthString(p0.result.name(), 6);
+		if (null != p1 && User.Result.NONE != p1.result) turns[2] = getFixedLengthString(p1.result.name(), 6);
+		if (null != p2 && User.Result.NONE != p2.result) turns[3] = getFixedLengthString(p2.result.name(), 6);
+		if (null != p3 && User.Result.NONE != p3.result) turns[4] = getFixedLengthString(p3.result.name(), 6);
 
 		// 3. scores...
 
@@ -211,9 +223,26 @@ public class View {
 		if (null != p3) balances[3] = getFixedLengthString("$" + String.valueOf(p3.balance), NB_BALANCE_FIELD_SIZE);
 
 
+		// for now, display the server state here...
+		String serverState = getFixedLengthString("STATE="+parser.serverState.name(), 18); //NOTE: if the enum types change names, then this will have to be updated
+		serverState = serverState.replaceAll(" ", "=");
+
+		// also display the timers here...
+		long serverUptimeMillis = parser.getServerUptimeMillis();
+		// clamp for UI only...
+		final long maxDisplayedUptime = 99999999999999L; // good for ~3170 years! (14 digits)
+		if (serverUptimeMillis > maxDisplayedUptime) serverUptimeMillis = maxDisplayedUptime;
+		long timeLeftOnTimerMillis = parser.getTimeLeftOnTimerMillis();
+
+		long timeLeftOnTimerSeconds = (long) Math.ceil((double) timeLeftOnTimerMillis / 1000);
+
+		String uptime = getFixedLengthString(String.valueOf(serverUptimeMillis), 14);
+		String timer = getFixedLengthString(String.valueOf(timeLeftOnTimerSeconds), 2);
+
+		
 		//NOTE: wow, it's ugly...
 		String ui =
-          "|==============================================================================||;"
+          "|="+serverState+"===UPTIME(ms)="+uptime+"===TIMER(s)="+timer+"=================||;"
         + "|                                    "+turns[0]+"                                    ||;"
         + "|                                    DEALER                                    ||;"
         + "|                                   SCORE:"+scores[0]+"                                   ||;"
@@ -226,7 +255,7 @@ public class View {
         + "|                                                                              ||;"
         + "|         "+turns[4]+"            "+turns[3]+"            "+turns[2]+"            "+turns[1]+"         ||;"
         + "|        BET:"+bets[3]+"          BET:"+bets[2]+"          BET:"+bets[1]+"          BET:"+bets[0]+"        ||;"
-        + "|                                                                              |;"
+        + "|                                                                              ||;"
         + "|        SCORE:"+scores[4]+"          SCORE:"+scores[3]+"          SCORE:"+scores[2]+"          SCORE:"+scores[1]+"        ||;"
         + "|      "+cards[4][0][0]+cards[4][0][1]+cards[4][0][2]+cards[4][0][3]+"      "+cards[3][0][0]+cards[3][0][1]+cards[3][0][2]+cards[3][0][3]+"      "+cards[2][0][0]+cards[2][0][1]+cards[2][0][2]+cards[2][0][3]+"      "+cards[1][0][0]+cards[1][0][1]+cards[1][0][2]+cards[1][0][3]+"      ||;"
         + "|      "+cards[4][1][0]+cards[4][1][1]+cards[4][1][2]+cards[4][1][3]+"      "+cards[3][1][0]+cards[3][1][1]+cards[3][1][2]+cards[3][1][3]+"      "+cards[2][1][0]+cards[2][1][1]+cards[2][1][2]+cards[2][1][3]+"      "+cards[1][1][0]+cards[1][1][1]+cards[1][1][2]+cards[1][1][3]+"      ||;"

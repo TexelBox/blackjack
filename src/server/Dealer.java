@@ -12,6 +12,7 @@ import client.User;
  */
 
 
+//UNUSED????
 public class Dealer {
 	private List<Turn> turns;
 	private List<ActionBuffer> actions;
@@ -25,6 +26,8 @@ public class Dealer {
 	public Dealer() {
 		
 	}
+
+/*
 	public static void dealerPlay() {
 		Card.shuffleCards();
 		User.dealersCards.add(Card.deckOfCards.pop());
@@ -57,6 +60,8 @@ public class Dealer {
 		}
 
 	}
+*/
+	//unused?
 	// step 1
 	public Turn deal() {
 		Turn turn = new Turn();
@@ -65,6 +70,7 @@ public class Dealer {
 		return turn;
 	}
 
+	//unused?
 	// step 2 for each player that calls this
 	public ActionBuffer handleAction(String username, Action action) {
 		// what should this actually do? Change their hand right?
@@ -87,6 +93,7 @@ public class Dealer {
 		}
 	}
 
+	//unused?
 	// step 3
 	public Turn computeResults(int turnIndex) {
 		Turn turn = turns.get(turnIndex);

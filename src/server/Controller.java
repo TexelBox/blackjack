@@ -9,6 +9,7 @@ public class Controller {
 	private static API service;
 
 	public static void main(String args[]) {
+		long serverStartTimeMillis = System.currentTimeMillis();
 		/**
 		 * Instantiates the API singleton
 		 * 
@@ -18,7 +19,7 @@ public class Controller {
 			Controller c = new Controller();
 		
 			// infinite loop through rooms
-			service = new API();
+			service = new API(serverStartTimeMillis);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
