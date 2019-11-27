@@ -69,6 +69,7 @@ public class API {
 	}
 	private Map<Socket, String> users = new HashMap<Socket, String>();
 	public API(long serverStartTimeMillis) throws Exception {
+		this.parser = new Parser();
 		serverCurrentTimeMillis = serverStartTimeMillis;
 		System.out.println("Welcome to blackjack");
 
@@ -104,6 +105,7 @@ public class API {
 		// Wait for something happen among all registered sockets
 		try {
 			boolean terminated = false;
+			long timePassed = 0;
 			while (!terminated) {
 
 				//TODO: change this so all guis only update at end of frame
@@ -269,12 +271,18 @@ public class API {
 				long deltaTimeMillis = newTimeMillis - serverCurrentTimeMillis;
 				serverCurrentTimeMillis = newTimeMillis;
 				parser.tickTimer(deltaTimeMillis);
-				
-				// update guis...
-				String UIState = View.getStateUI(this.parser);
-				for (Socket guiSocket : gui) {
-					guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
+				timePassed += deltaTimeMillis;
+
+				if(timePassed > 100) {
+					// update guis...
+					String UIState = View.getStateUI(this.parser);
+					for (Socket guiSocket : gui) {
+						guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
+					}
+					doHTTP(UIState);
+					timePassed = 0;
 				}
+				
 
 			} // end of while (!terminated)
 		} catch (IOException e) {
