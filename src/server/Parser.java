@@ -71,7 +71,25 @@ public class Parser {
 
 	//NOTE: i'm changing this to now put new connections in as spectators
 	// return -1 if server is full (number connected users (non-null spectators+players) == spectators.size())
+	// return -1 if server has username already logged in
 	public int setUser(String auth) {
+		String[] loginInfo = auth.trim().split(":");
+		String username = loginInfo[0];
+
+		// check to make sure username is not already logged in...
+		for (User p : players) {
+			if (null == p) continue;
+
+			if (username.equals(p.username)) return -1; // already logged in!
+		}
+		for (User s : spectators) {
+			if (null == s) continue;
+
+			if (username.equals(s.username)) return -1; // already logged in!
+		}
+
+		// get here if not already logged in...
+
 		// check that server is not full...
 		// find number of connected users
 		int numConnectedUsers = 0;

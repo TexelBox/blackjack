@@ -27,7 +27,7 @@ public class View {
 	public static final String UI_SANTIZATION_ERROR = "Please do not enter any special characters.\n";
 	public static final String UI_BET_ERROR = "Please enter a numeric value after your bet. No decimals.\n";
 	public static final String UI_AUTH_ERROR = "Invalid credentials.\n";
-	public static final String UI_FULL_ERROR = "No more room for players.\n";
+	public static final String UI_FULL_ERROR = "Server is either full or that username is already logged in.\n";
 	public static final String UI_COMMAND_ERROR = "\n\nPlease enter one of the following commands:\n";
 	public static final String UI_USERNAME_STR_ERROR = "Invalid username string. Must be alpha-numeric and between 1 and 12 characters.\n";
 	public static final String UI_PASSWORD_STR_ERROR = "Invalid password string. Must be alpha-numeric and between 1 and 32 characters.\n";

@@ -72,7 +72,7 @@ public class User {
 					System.out.println("Welcome " + username);
 					invalidInput = false; // break out of loop
 				} else {
-					if (m.toString().equals("full")) System.out.print(View.UI_FULL_ERROR); // table is full
+					if (m.toString().equals("full")) System.out.print(View.UI_FULL_ERROR); // table is full or already logged in
 					else System.out.print(View.UI_AUTH_ERROR); // username does not exist on server or password is wrong
 				}
 			}
