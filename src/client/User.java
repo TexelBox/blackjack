@@ -7,9 +7,8 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.*;
 
-public class User implements Runnable {
+public class User {
 
 	public enum Result {
 		NONE,
@@ -22,13 +21,6 @@ public class User implements Runnable {
 
 	public Result result = Result.NONE;
 
-	//public enum UserType {
-	//	SPECTATOR, // default
-	//	PLAYER
-	//}
-
-	//public UserType userType = UserType.SPECTATOR; // client can check this type to error check over commands entered before sending to server
-
 	public static String currentPlayerTurn = "0"; // this should never be null and only go from 0-4 (0 means dealer)
 	protected API service = null;
 	public String username = null; // must be init when new player joins table (NOTE: null will crash UI to inidicate you dun goofed)
@@ -39,13 +31,8 @@ public class User implements Runnable {
 	public LinkedList<String> cards = new LinkedList<String>();
 	public static LinkedList<String> dealersCards = new LinkedList<String>();
 	public static LinkedList<String> chatbox = new LinkedList<String>();
-	//public static String DealerCardChanges;
-	//public String[] playerChanges = {";"," ","~"," ","~"," ","~"," ","~"," "};
-	//public static String chatChanges = "";
-	Timer timer;
 	protected static Scanner scan = null;
 
-	static List<String> outGoing = new ArrayList<String>();
 
 	public static void main(String[] args) {
 		API service = null;
@@ -90,11 +77,6 @@ public class User implements Runnable {
 				}
 			}
 
-			// fix balance
-			Executors
-				.newSingleThreadScheduledExecutor()
-				.scheduleAtFixedRate(new User(service, username, 0), 0, 50, TimeUnit.MILLISECONDS);
-
 			// get input
 			System.out.print(View.UI_COMMAND_INFO);
 			System.out.print(View.UI_ENTER_COMMAND);
@@ -119,7 +101,7 @@ public class User implements Runnable {
 
 				nextLine = nextLine.trim();
 				if (nextLine.isEmpty()) {
-					//TODO: error msg
+					//TODO?: error msg
 					continue; //?
 				}
 
@@ -127,28 +109,37 @@ public class User implements Runnable {
 				//NOTE: parts.length cannot be 0, so no need to check
 				String cmdStr = parts[0];
 
-				//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.....remove this
 				// ready up the message to send based on protocol if everything is to go right...
 				// format: "(cmd):(state):(username)" =:= "(parts[0].charAt(1):parts.length > 1 ? parts[1] : " ":(username)"
 
 				//NOTE: this looks really redundant and I could use fall-through cases here, but i'm leaving it like this so that each case could have different specific error msgs if needed
+				//TODO: more specific error messages!
+				//TODO: make sure /q is handled properly
+				//TODO?: add getLeaderboard command				
 				switch(cmdStr) {
-					//case "/q":
-					//	if (1 == parts.length) {
-					//		// success, send to server
-					//		outGoing.add("q: :" + username);
-					//		// if "ok", call system.exit
-					//		// else, error msg
-					//	} else {
-					//		//error
-					//	}
-					//	break;
+					case "/q":
+						if (1 == parts.length) {
+							// success, send to server
+							Message m = service.sendAndWait("q: :" + username);
+							if (m.ok()) {
+								//TODO: any resource closing needed???
+								System.exit(0);
+							} else {
+								System.out.println("ERROR");
+							}
+						} else {
+							//error
+						}
+						break;
 					case "/j":
 						if (1 == parts.length) {
 							// success, send to server
-							outGoing.add("j: :" + username);
-							// if "ok", do nothing
-							// else, error msg
+							Message m = service.sendAndWait("j: :" + username);
+							if (m.ok()) {
+								System.out.println("You have joined the table (wait until betting window opens).");
+							} else {
+								System.out.println("ERROR");
+							}
 						} else {
 							//error
 						}
@@ -161,9 +152,12 @@ public class User implements Runnable {
 								int betVal = Integer.parseInt(betValStr); // trims any leading zeros
 								if (betVal >= View.NB_BET_MIN_VALUE && betVal <= View.NB_BET_MAX_VALUE) {
 									// success, send to server
-									outGoing.add("b:" + betVal + ":" + username);
-									// if "ok", do nothing
-									// else, error msg
+									Message m = service.sendAndWait("b:" + betVal + ":" + username);
+									if (m.ok()) {
+										System.out.println("You have placed your bet on the table (wait until player turns window opens).");
+									} else {
+										System.out.println("ERROR");
+									}
 								} else {
 									//error
 								}
@@ -177,9 +171,12 @@ public class User implements Runnable {
 					case "/s":
 						if (1 == parts.length) {
 							// success, send to server
-							outGoing.add("s: :" + username);
-							// if "ok", do nothing
-							// else, error msg
+							Message m = service.sendAndWait("s: :" + username);
+							if (m.ok()) {
+								System.out.println("\"I STAND\"");
+							} else {
+								System.out.println("ERROR");
+							}
 						} else {
 							//error
 						}
@@ -187,9 +184,12 @@ public class User implements Runnable {
 					case "/h":
 						if (1 == parts.length) {
 							// success, send to server
-							outGoing.add("h: :" + username);
-							// if "ok", do nothing
-							// else, error msg
+							Message m = service.sendAndWait("h: :" + username);
+							if (m.ok()) {
+								System.out.println("\"HIT ME!\"");
+							} else {
+								System.out.println("ERROR");
+							}
 						} else {
 							//error
 						}
@@ -197,9 +197,12 @@ public class User implements Runnable {
 					case "/d":
 						if (1 == parts.length) {
 							// success, send to server
-							outGoing.add("d: :" + username);
-							// if "ok", do nothing
-							// else, error msg
+							Message m = service.sendAndWait("d: :" + username);
+							if (m.ok()) {
+								System.out.println("\"DOUBLE-DOWN!\"");
+							} else {
+								System.out.println("ERROR");
+							}
 						} else {
 							//error
 						}
@@ -220,7 +223,7 @@ public class User implements Runnable {
 								if (msg.length() > View.NB_CHATBOX_MSG_CHAR_LIMIT) msg = msg.substring(0, View.NB_CHATBOX_MSG_CHAR_LIMIT);
 								
 								// success, send to server
-								outGoing.add("t:" + msg + ":" + username);
+								Message m = service.sendAndWait("t:" + msg + ":" + username);
 								// this should always get "ok" back, so do nothing
 							} else {
 								//error
@@ -234,7 +237,6 @@ public class User implements Runnable {
 						System.out.print(View.UI_COMMAND_ERROR);
 						System.out.print(View.UI_COMMAND_INFO);
 				}
-				//outGoing.add(nextLine.substring(0,3) + username + ": " + nextLine.substring(3)); //TODO: delete this after I fix protocol stuff
 				System.out.print(View.UI_ENTER_COMMAND);
 			}
 		} catch (Exception e) {
@@ -243,12 +245,21 @@ public class User implements Runnable {
 		}
 	}
 
-	//NOTE: only this constructor should be used when initializing a new player at the table (after join commands processed)
+
+	//NOTE: this constructor is used by parser (e.g. joining table)
 	// all other fields will get updated in their initialization windows (betting, cards delt, game turns, etc.)
-	protected User(API service, String username, int balance) {
-		this.service = service;
+	public User(String username, int balance) {
+		this.service = null;
 		this.username = username;
 		this.balance = balance;
+	}
+
+
+	public static void resetStatics() {
+		currentPlayerTurn = "0";
+		dealerScore = -1;
+		dealersCards.clear();
+		//NOTE: the chatbox does not get cleared here
 	}
 
 
@@ -332,40 +343,6 @@ public class User implements Runnable {
 		return numSoftAces == 0;
 	}
 
-
-
-	// test user
-	public User(String username, int balance) {
-		this.service = null;
-		this.username = username;
-		this.balance = balance;
-	}
-
-	public static void resetStatics() {
-		currentPlayerTurn = "0";
-		dealerScore = -1;
-		dealersCards.clear();
-		//NOTE: the chatbox does not get cleared here
-	}
-
-
-	// view updates
-	public void run() {
-		if(this.service!=null) {
-			List<Message> messages = this.service.receive();
-			for(Message message: messages) {
-				System.out.flush();
-			}
-
-
-
-			//TODO: get back error states???
-			for(String message: outGoing) {
-				this.service.send(new Message(message));
-			}
-			outGoing = new ArrayList<String>();
-		}
-	}
 
 	// HELPERS...
 

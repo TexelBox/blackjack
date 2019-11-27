@@ -178,6 +178,7 @@ public class API {
 								// top-level is for specific cases (could be handled better), inner switch is for main protocol handling
 								switch(line) {
 									// initalizes the GUI
+									//NOTE: "<<GUI>>" gets sent here everytime browser page is loaded/reloaded/newtabs/etc. 
 									case "<<GUI>>":
 										if (!gui.contains(socket)) gui.add(socket); // bind
 
@@ -198,6 +199,15 @@ public class API {
 										if (this.parser.errorCheck(line)) {
 											this.parser.actionTaken(line); // update state
 											System.out.println("OK");
+
+											// do this before sending message back to client??
+											// do we have to close socket??
+											//NOTE: could call close() and handle the exception on client side???
+											//NOTE: this seems to work, not sure if its resource leaking???
+											String[] parts = line.split(":");
+											String cmd = parts[0];
+											if (cmd.equals("q")) key.cancel();
+
 											cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
 										} else {
 											System.out.println("NO");

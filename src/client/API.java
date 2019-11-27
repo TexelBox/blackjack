@@ -55,4 +55,14 @@ public class API {
 			return new Message();
 		}
 	}
+
+	public Message sendAndWait(String protocol) {
+		outBuffer.println(protocol);
+		try {
+			return new Message(inBuffer.readLine());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new Message();
+		}
+	}
 } 
