@@ -21,7 +21,7 @@ public class Parser {
 	protected static final List<String> passwords = Arrays.asList("1","2","3","4");
 	protected static final List<Integer> balances = Arrays.asList(1,9999999,300,400); // min = $1, max = $9999999
 	protected List<User> players = Arrays.asList(null, null, null, null); // players at the table
-	protected List<User> spectators = Arrays.asList(null, null, null, null, null); // spectators (between rounds this needs to be able to hold everyone connected)
+	public List<User> spectators = Arrays.asList(null, null, null, null, null); // spectators (between rounds this needs to be able to hold everyone connected)
 
 	public ServerState serverState = ServerState.JOINING;
 
