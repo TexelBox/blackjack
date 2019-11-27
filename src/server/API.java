@@ -1,6 +1,5 @@
 package server;
 
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -14,8 +13,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import client.View;
@@ -39,6 +40,8 @@ public class API {
 	public Parser parser = null;
 	private long serverCurrentTimeMillis = 0;
 
+	private Map<Socket, String> users = new HashMap<Socket, String>();
+
 	public API(long serverStartTimeMillis) throws Exception {
 		this.parser = new Parser();
 		serverCurrentTimeMillis = serverStartTimeMillis;
@@ -51,7 +54,9 @@ public class API {
 		CharsetEncoder encoder = charset.newEncoder();
 		ByteBuffer inBuffer = null;
 		CharBuffer cBuffer = null;
-		int bytesSent, bytesRecv;     // number of bytes sent or received
+		// number of bytes sent or received
+		int bytesSent = 0;
+		int bytesRecv = 0;
 
 		int portNum = 9000;
 
@@ -95,12 +100,18 @@ public class API {
 					// Accept new connections, if any
 					if (key.isAcceptable()) {
 
-						SocketChannel cchannel = ((ServerSocketChannel)key.channel()).accept();
-						cchannel.configureBlocking(false);
-						System.out.println("Accept conncection from " + cchannel.socket().toString());
+						try {
+							SocketChannel cchannel = ((ServerSocketChannel)key.channel()).accept();
+							cchannel.configureBlocking(false);
+							System.out.println("Accept conncection from " + cchannel.socket().toString());
 
-						// Register the new connection for read operation
-						cchannel.register(selector, SelectionKey.OP_READ);
+							// Register the new connection for read operation
+							cchannel.register(selector, SelectionKey.OP_READ);
+						} catch (Exception e) {
+							key.cancel();
+							continue;
+						}
+						
 					} else {
 						SocketChannel cchannel = (SocketChannel)key.channel();
 						if (key.isReadable()){
@@ -111,11 +122,24 @@ public class API {
 							cBuffer = CharBuffer.allocate(BUFFERSIZE);
 
 							// Read from socket
-							bytesRecv = cchannel.read(inBuffer);
-							if (bytesRecv <= 0)
-							{
+							try {
+								//NOTE: on CTRL+C of either java client or gui client (node .) (the IOException gets thrown here by read())
+								bytesRecv = cchannel.read(inBuffer);
+							} catch (IOException e) {
+								System.out.println("connection force closed");
+								key.cancel();
+								if (gui.contains(socket)) gui.remove(socket);
+								else if (users.containsKey(socket)) {
+									//TODO: safeguard game state (logout spectators / delay logout players)
+									parser.handleDisconnect(users.get(socket));
+								}
+								continue;
+							}
+
+							if (bytesRecv <= 0) {
 								System.out.println("read() error, or connection closed");
 								key.cancel();  // deregister the socket
+								if (gui.contains(socket)) gui.remove(socket);
 								continue;
 							}
 
@@ -133,7 +157,14 @@ public class API {
 							if (line.substring(0, 3).equals("/a ")) {
 								if (this.parser.authenticate(line.substring(3))) {
 									if (this.parser.setUser(line.substring(3)) == -1) cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
-									else cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+									else {
+										String[] loginInfo = line.substring(3).trim().split(":");
+										String username = loginInfo[0];
+										//NOTE: it should be impossible for this socket to already be a key in the hashmap, so no need to chekc it
+										// bind socket to username  for usage in crash-handling
+										users.put(socket, username);
+										cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+									}
 								} else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
 							} else if (line.substring(0, 1).equals("t")) { // right now, the talking is not passed to parser state 
 								cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n"))); //NOTE: doing this first to not hang up client
@@ -149,6 +180,7 @@ public class API {
 									// initalizes the GUI
 									//NOTE: "<<GUI>>" gets sent here everytime browser page is loaded/reloaded/newtabs/etc. 
 									case "<<GUI>>":
+										//System.out.println("BROWSER REFRESH / NEW TAB / NEW WINDOW / NEW BROWSER");
 										if (!gui.contains(socket)) gui.add(socket); // bind
 
 										socket.getChannel().write(encoder.encode(CharBuffer.wrap(View.getStateUI(this.parser))));
@@ -217,7 +249,9 @@ public class API {
 
 			} // end of while (!terminated)
 		} catch (IOException e) {
+			//NOTE: this exception gets thrown when any client java program crashes (e.g. CTRL+C) or server gui program crashes (e.g. CTRL+C) 
 			System.out.println(e);
+			
 		}
 
 		// close all connections

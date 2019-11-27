@@ -1,6 +1,7 @@
 package server;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
 import client.User;
 //import client.User.UserType;
@@ -27,6 +28,8 @@ public class Parser {
 	// both times in milliseconds
 	private long serverUptimeMillis = 0;
 	private long timeLeftOnTimerMillis = 10000;
+
+	private List<String> disconnectedPlayerUsernames = new ArrayList<String>();
 
 	Parser() { 
 
@@ -568,6 +571,13 @@ public class Parser {
 			User p = players.get(i);
 			if (null == p) continue;
 
+			// first check if player was disconnected...
+			if (disconnectedPlayerUsernames.contains(p.username)) {
+				players.set(i, null);
+				disconnectedPlayerUsernames.remove(p.username);
+				continue;
+			}
+
 			// find open spot...
 			for (int j = 0; j < spectators.size(); ++j) {
 				User s = spectators.get(j);
@@ -620,6 +630,50 @@ public class Parser {
 					break;
 				default: // impossible
 
+			}
+		}
+	}
+
+
+	public void handleDisconnect(String username) {
+		if (null == username) return;
+
+		// search players first...
+		for (User p : players) {
+			if (null == p) continue;
+
+			if (username.equals(p.username)) {
+				// delay logout of player until round is over (auto-timer events will handle their actions)
+				disconnectedPlayerUsernames.add(username);
+				return;
+			}
+		}
+
+		// search spectators next...
+		for (User s : spectators) {
+			if (null == s) continue;
+
+			if (username.equals(s.username)) {
+				// logout spectator immedietely...
+				logoutSpectator(username);
+				return;
+			}
+		}
+	}
+
+
+	private void logoutSpectator(String username) {
+		if (null == username) return;
+
+		// search...
+		for (int i = 0; i < spectators.size(); ++i) {
+			User s = spectators.get(i);
+			if (null == s) continue;
+
+			// match...
+			if (username.equals(s.username)) {
+				spectators.set(i, null);
+				break;
 			}
 		}
 	}
