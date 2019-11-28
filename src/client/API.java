@@ -21,8 +21,8 @@ public class API {
 	PrintWriter outBuffer;
 	BufferedReader inBuffer;
 
-    public API() throws Exception {
-        clientSocket = new Socket("10.1.2.144", 9000);
+    public API(String serverIP) throws Exception {
+        clientSocket = new Socket(serverIP, 9000);
 
 		outBuffer = new PrintWriter(clientSocket.getOutputStream(), true);
         inBuffer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));      

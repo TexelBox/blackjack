@@ -35,12 +35,22 @@ public class User {
 
 
 	public static void main(String[] args) {
+		if (args.length != 1) {
+			System.out.println("Usage: java <path>/User <server ip>");
+			return;
+		}
+
 		API service = null;
 		String username = "";
 		scan = new Scanner(System.in);
 
 		try {
-			service = new API();
+			try {
+				service = new API(args[0]);
+			} catch (Exception e) {
+				System.out.println("ERROR: invalid server ip string");
+				return;
+			}
 
 			boolean invalidInput = true;
 			while(invalidInput) {
