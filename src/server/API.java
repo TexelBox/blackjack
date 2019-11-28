@@ -1,8 +1,11 @@
 package server;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.SelectionKey;
@@ -12,6 +15,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,9 +43,31 @@ public class API {
 	public static List<Socket> gui = new ArrayList<Socket>();
 	public Parser parser = null;
 	private long serverCurrentTimeMillis = 0;
+	private static HttpURLConnection con;
 
+	public void doHTTP(String input) {
+		try {
+			URL myurl = new URL("http://localhost:5001/cpsc441blackjack/us-central1/app");
+			con = (HttpURLConnection) myurl.openConnection();
+	
+			con.setDoOutput(true);
+			con.setInstanceFollowRedirects(false);
+			con.setRequestMethod("POST");
+			con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
+			con.setRequestProperty("charset", "utf-8");
+			con.setUseCaches(false);
+			
+			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
+				wr.write(("data=" + input).getBytes(StandardCharsets.UTF_8));
+				con.getInputStream();
+			}
+			con.disconnect();
+
+		} catch(Exception e) {
+			System.out.println(e);
+		}
+	}
 	private Map<Socket, String> users = new HashMap<Socket, String>();
-
 	public API(long serverStartTimeMillis) throws Exception {
 		this.parser = new Parser();
 		serverCurrentTimeMillis = serverStartTimeMillis;
@@ -74,9 +100,12 @@ public class API {
 		// Register that the server selector is interested in connection requests
 		channel.register(selector, SelectionKey.OP_ACCEPT);
 
+		doHTTP(View.getStateUI(this.parser));
+
 		// Wait for something happen among all registered sockets
 		try {
 			boolean terminated = false;
+			long timePassed = 0;
 			while (!terminated) {
 
 				//TODO: change this so all guis only update at end of frame
@@ -90,6 +119,7 @@ public class API {
 				Set readyKeys = selector.selectedKeys();
 				Iterator readyItor = readyKeys.iterator();
 				// Walk through the ready set
+
 				while (readyItor.hasNext()) {
 					// Get key from set
 					SelectionKey key = (SelectionKey)readyItor.next();
@@ -174,6 +204,7 @@ public class API {
 								for (Socket guiSocket : gui) {
 									guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + username + ": " + msg + "\n")));
 								}
+								doHTTP("<<TXT>>" + username + ": " + msg + "\n");
 							} else {
 								// top-level is for specific cases (could be handled better), inner switch is for main protocol handling
 								switch(line) {
@@ -217,12 +248,6 @@ public class API {
 								}
 							}
 
-							//TODO: this works, but could this cause delays since it updates all the gui's everytime someone sends in a command, even if nothings changed
-							String UIState = View.getStateUI(this.parser);
-							for (Socket guiSocket : gui) {
-								guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
-							}
-
 							// Echo the message back
 							bytesSent = inBuffer.position(); 
 							if (bytesSent != bytesRecv) {
@@ -240,12 +265,15 @@ public class API {
 				long deltaTimeMillis = newTimeMillis - serverCurrentTimeMillis;
 				serverCurrentTimeMillis = newTimeMillis;
 				parser.tickTimer(deltaTimeMillis);
+				timePassed += deltaTimeMillis;
+
+				// if(timePassed > 100) {
+					// update guis...
+					doHTTP(View.getStateUI(this.parser));
+
+					timePassed = 0;
+				// }
 				
-				// update guis...
-				String UIState = View.getStateUI(this.parser);
-				for (Socket guiSocket : gui) {
-					guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
-				}
 
 			} // end of while (!terminated)
 		} catch (IOException e) {
