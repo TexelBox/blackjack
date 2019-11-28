@@ -23,7 +23,7 @@
 6) Either `firebase login` (auth from same host) or `firebase login --no-localhost` (auth from any host).
     * NOTE: must login with an admin-privilege google account (e.g. using our dummy account credentials).
 7) `firebase serve`
-n) In the future once everything is shut down, you should probably run `firebase logout`
+    * NOTE: In the future once everything is shut down, you should probably run `firebase logout`
 
 ### GUI(s):
 1) Anybody can open `https://cpsc441blackjack.web.app/` in a browser (Chrome preferred).
