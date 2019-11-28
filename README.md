@@ -3,7 +3,7 @@
 How to run:
 
 Server:
-1) SSH into 199.116.235.39 with amir.hussain1n@ucalgary.ca's credentials
+1) SSH into 199.116.235.39 with amir.hussain1@ucalgary.ca's credentials
 2) `source start.sh`
 3) `cd CPSC441BlackJack`
 4) `git checkout master`
