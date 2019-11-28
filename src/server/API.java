@@ -250,12 +250,6 @@ public class API {
 								}
 							}
 
-							//TODO: this works, but could this cause delays since it updates all the gui's everytime someone sends in a command, even if nothings changed
-							System.out.println("before http");
-							doHTTP(View.getStateUI(this.parser));
-							System.out.println("after http");
-
-
 							// Echo the message back
 							bytesSent = inBuffer.position(); 
 							if (bytesSent != bytesRecv) {
@@ -277,7 +271,10 @@ public class API {
 
 				// if(timePassed > 100) {
 					// update guis...
+					System.out.println("BEFORE HTTP");
 					doHTTP(View.getStateUI(this.parser));
+					System.out.println("AFTER HTTP");
+
 					timePassed = 0;
 				// }
 				
