@@ -20,7 +20,7 @@ Server:
 15) `firebase serve`
 
 GUI:
-1) Open `http://https://cpsc441blackjack.web.app/`
+1) Open `http://cpsc441blackjack.web.app/`
 
 Client Java setup for each computer
 1) Make sure you have `java` and `javac` installed
