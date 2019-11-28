@@ -59,7 +59,7 @@ public class API {
 			
 			try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
 				wr.write(("data=" + input).getBytes(StandardCharsets.UTF_8));
-				System.out.println(con.getInputStream());
+				con.getInputStream();
 			}
 			con.disconnect();
 
@@ -120,9 +120,7 @@ public class API {
 				Iterator readyItor = readyKeys.iterator();
 				// Walk through the ready set
 
-				System.out.println("before while");
 				while (readyItor.hasNext()) {
-					System.out.println("after while");
 					// Get key from set
 					SelectionKey key = (SelectionKey)readyItor.next();
 
@@ -271,9 +269,7 @@ public class API {
 
 				// if(timePassed > 100) {
 					// update guis...
-					System.out.println("BEFORE HTTP");
 					doHTTP(View.getStateUI(this.parser));
-					System.out.println("AFTER HTTP");
 
 					timePassed = 0;
 				// }
