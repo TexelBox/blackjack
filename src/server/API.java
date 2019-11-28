@@ -170,6 +170,10 @@ public class API {
 								System.out.println("read() error, or connection closed");
 								key.cancel();  // deregister the socket
 								if (gui.contains(socket)) gui.remove(socket);
+								else if (users.containsKey(socket)) {
+									//TODO: safeguard game state (logout spectators / delay logout players)
+									parser.handleDisconnect(users.get(socket));
+								}
 								continue;
 							}
 
@@ -267,12 +271,11 @@ public class API {
 				parser.tickTimer(deltaTimeMillis);
 				timePassed += deltaTimeMillis;
 
-				// if(timePassed > 100) {
+				if (timePassed > 33) {
 					// update guis...
 					doHTTP(View.getStateUI(this.parser));
-
 					timePassed = 0;
-				// }
+				}
 				
 
 			} // end of while (!terminated)
