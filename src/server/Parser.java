@@ -2,7 +2,9 @@ package server;
 
 import java.util.List;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import client.User;
@@ -658,11 +660,18 @@ public class Parser {
 	private void dealerTurnToJoining() {
 		if (ServerState.DEALER_TURN != serverState) return;
 
+		// for later file processing...
+		List<String> playerUsernames = new ArrayList<String>();
+		List<Integer> playerBalances = new ArrayList<Integer>();
+
 		// clear table...
 		// move players into spectators list
 		for (int i = 0; i < players.size(); ++i) {
 			User p = players.get(i);
 			if (null == p) continue;
+
+			playerUsernames.add(p.username);
+			playerBalances.add(p.balance);
 
 			// first check if player was disconnected...
 			if (disconnectedPlayerUsernames.contains(p.username)) {
@@ -679,6 +688,57 @@ public class Parser {
 					players.set(i, null);
 					break;
 				}
+			}
+		}
+
+		// update player balances in users file...
+		// first read file and overwrite lines with matching usernames...
+		List<String> fileLines = new ArrayList<String>();
+		boolean readException = false;
+		try (BufferedReader br = new BufferedReader(new FileReader("server/users.txt"))) {
+			for (String line; (line = br.readLine()) != null;) {
+				// add line assuming it won't change...
+				fileLines.add(line);
+
+				// check if this line needs its balance overwritten...
+				String trimmedLine = line.trim();
+				// make sure its not an empty line or comment line...
+				if (trimmedLine.isEmpty()) continue;
+				if (trimmedLine.charAt(0) == '/') continue;
+				
+				// assume line to be in valid format USERNAME:PASSWORD:BALANCE
+				// assume parts to be in valid formats
+				String[] parts = line.split(":");
+				String savedUsername = parts[0].trim();
+				String savedPassword = parts[1].trim();
+				String savedBalanceStr = parts[2].trim();
+
+				// now we can check if username in file matches any of the player's usernames...
+				for (int i = 0; i < playerUsernames.size(); ++i) {
+					String username = playerUsernames.get(i);
+					if (username.equals(savedUsername)) {
+						savedBalanceStr = playerBalances.get(i).toString();
+						// update file line...
+						fileLines.set(fileLines.size()-1, savedUsername+":"+savedPassword+":"+savedBalanceStr);
+						break; // no need to check other players
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("SERVER ERROR: error on read of users file. Failure to update balances.");
+			readException = true;
+		}
+
+		// now write all lines back to file...
+		if (!readException) {
+			try (BufferedWriter bw = new BufferedWriter(new FileWriter("server/users.txt"))) {
+				for (String s : fileLines) {
+					bw.write(s);
+					bw.newLine();
+				}
+			} catch (Exception e) {
+				System.out.println("SERVER ERROR: error on write to users file. Failure to update balances.");
+				System.exit(1); // should just blow up server here since users file is corrupted
 			}
 		}
 
