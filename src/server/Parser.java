@@ -1,6 +1,8 @@
 package server;
 
 import java.util.List;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import client.User;
@@ -17,9 +19,6 @@ public class Parser {
 		DEALER_TURN // get here from player turns window once turnID has now got back to dealer
 	}
 
-	protected static final List<String> usernames = Arrays.asList("Aaron", "Amir", "Dom", "Elvin");
-	protected static final List<String> passwords = Arrays.asList("1","2","3","4");
-	protected static final List<Integer> balances = Arrays.asList(1,9999999,300,400); // min = $1, max = $9999999
 	protected List<User> players = Arrays.asList(null, null, null, null); // players at the table
 	public List<User> spectators = Arrays.asList(null, null, null, null, null); // spectators (between rounds this needs to be able to hold everyone connected)
 
@@ -75,6 +74,7 @@ public class Parser {
 	//NOTE: i'm changing this to now put new connections in as spectators
 	// return -1 if server is full (number connected users (non-null spectators+players) == spectators.size())
 	// return -1 if server has username already logged in
+	// return -1 if server found an error when reading users file
 	public int setUser(String auth) {
 		String[] loginInfo = auth.trim().split(":");
 		String username = loginInfo[0];
@@ -108,7 +108,10 @@ public class Parser {
 		// getting here means we can add user to spectators
 		for (int i = 0; i < spectators.size(); ++i) {
 			if (null == spectators.get(i)) {
-				spectators.set(i, getUserInfo(auth.trim().split(":")[0]));
+				User newUser = getUserInfo(username);
+				if (null == newUser) return -1;
+				
+				spectators.set(i, newUser);
 				return i;
 			}
 		}
@@ -119,13 +122,59 @@ public class Parser {
 	public User getUserInfo(String username) {
 		if (null == username) return null;
 
-		int i = usernames.indexOf(username);
-		
-		// if this username is not saved in list...
-		if (-1 == i) return null;
+		// check users file...
+		try (BufferedReader br = new BufferedReader(new FileReader("server/users.txt"))) {
+			for (String line; (line = br.readLine()) != null;) {
+				// check over line for matching credentials...
+				line = line.trim();
+				// make sure its not an empty line or comment line...
+				if (line.isEmpty()) continue;
+				if (line.charAt(0) == '/') continue;
 
-		// construct the user from scratch (hard-coded balance that could be read from file in A4)
-		return new User(usernames.get(i), balances.get(i)); //TODO: read balance in from file (A4)
+				// expect line to be in valid format USERNAME:PASSWORD:BALANCE
+				String[] parts = line.split(":");
+				if (parts.length != 3) {
+					System.out.println("SERVER WARNING: users file contains invalid line format.");
+					continue;
+				}
+
+				// validate specific formats...
+				String savedUsername = parts[0].trim();
+				String savedPassword = parts[1].trim();
+				String savedBalanceStr = parts[2].trim();
+
+				if (!User.isValidUsernameStr(savedUsername)) {
+					System.out.println("SERVER WARNING: users file contains invalid username.");
+					continue;
+				}
+
+				if (!User.isValidPasswordStr(savedPassword)) {
+					System.out.println("SERVER WARNING: users file contains invalid password.");
+					continue;
+				}
+
+				if (!User.isValidBalanceStr(savedBalanceStr)) {
+					System.out.println("SERVER WARNING: users file contains invalid balance.");
+					continue;
+				}
+
+				// now we can check if credentials match...
+				if (username.equals(savedUsername)) {
+					try {
+						int balance = Integer.parseInt(savedBalanceStr); //NOTE: this should never throw
+						return new User(savedUsername, balance);
+					} catch (Exception e) {
+						e.printStackTrace();
+						return null;
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("SERVER ERROR: error on read of users file.");
+			return null;
+		}
+
+		return null;
 	}
 
 	// getPlayer
@@ -249,10 +298,54 @@ public class Parser {
 	// format: (username):(password)
 	public boolean authenticate(String input) {
 		String[] loginInfo = input.trim().split(":");
-		int index = usernames.indexOf(loginInfo[0]);
-		if(-1 != index) {
-			return passwords.get(index).equals(loginInfo[1]);
+		String username = loginInfo[0];
+		String password = loginInfo[1];
+
+		// check users file...
+		try (BufferedReader br = new BufferedReader(new FileReader("server/users.txt"))) {
+			for (String line; (line = br.readLine()) != null;) {
+				// check over line for matching credentials...
+				line = line.trim();
+				// make sure its not an empty line or comment line...
+				if (line.isEmpty()) continue;
+				if (line.charAt(0) == '/') continue;
+
+				// expect line to be in valid format USERNAME:PASSWORD:BALANCE
+				String[] parts = line.split(":");
+				if (parts.length != 3) {
+					System.out.println("SERVER WARNING: users file contains invalid line format.");
+					continue;
+				}
+
+				// validate specific formats...
+				String savedUsername = parts[0].trim();
+				String savedPassword = parts[1].trim();
+				String savedBalanceStr = parts[2].trim();
+
+				if (!User.isValidUsernameStr(savedUsername)) {
+					System.out.println("SERVER WARNING: users file contains invalid username.");
+					continue;
+				}
+
+				if (!User.isValidPasswordStr(savedPassword)) {
+					System.out.println("SERVER WARNING: users file contains invalid password.");
+					continue;
+				}
+
+				if (!User.isValidBalanceStr(savedBalanceStr)) {
+					System.out.println("SERVER WARNING: users file contains invalid balance.");
+					continue;
+				}
+
+				// now we can check if credentials match...
+				if (username.equals(savedUsername) && password.equals(savedPassword)) return true;
+
+			}
+		} catch (Exception e) {
+			System.out.println("SERVER ERROR: error on read of users file.");
+			return false;
 		}
+		
 		return false;
 	}
 

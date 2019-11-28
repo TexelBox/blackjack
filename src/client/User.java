@@ -374,7 +374,7 @@ public class User {
 		return true;
 	}
 
-	private static boolean isValidUsernameStr(String s) {
+	public static boolean isValidUsernameStr(String s) {
 		// can't be null
 		if (null == s) return false;
 
@@ -390,7 +390,7 @@ public class User {
 		return true;
 	}
 
-	private static boolean isValidPasswordStr(String s) {
+	public static boolean isValidPasswordStr(String s) {
 		// can't be null
 		if (null == s) return false;
 
@@ -402,6 +402,29 @@ public class User {
 
 		// must be >= 1 (already checked above) and <= max char limit
 		if (s.length() > View.NB_PASSWORD_CHAR_LIMIT) return false;
+
+		return true;
+	}
+
+	public static boolean isValidBalanceStr(String s) {
+		// can't be null
+		if (null == s) return false;
+
+		// can't be empty
+		if (s.isEmpty()) return false;
+
+		// must be >= 1 (already checked above) and <= max char limit
+		if (s.length() > View.NB_BALANCE_FIELD_SIZE-1) return false;
+
+		// must be an int from 1 to 9999999
+		if (!isNonNegativeInt(s)) return false;
+		try {
+			int balance = Integer.parseInt(s); //NOTE: this should never throw
+			if (balance < 1 || balance > 9999999) return false;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 
 		return true;
 	}
