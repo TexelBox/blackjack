@@ -119,7 +119,10 @@ public class API {
 				Set readyKeys = selector.selectedKeys();
 				Iterator readyItor = readyKeys.iterator();
 				// Walk through the ready set
+
+				System.out.println("before while");
 				while (readyItor.hasNext()) {
+					System.out.println("after while");
 					// Get key from set
 					SelectionKey key = (SelectionKey)readyItor.next();
 
@@ -203,7 +206,7 @@ public class API {
 								for (Socket guiSocket : gui) {
 									guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + username + ": " + msg + "\n")));
 								}
-								doHTTP("<<TXT>>" + line.substring(3));
+								doHTTP("<<TXT>>" + username + ": " + msg + "\n");
 							} else {
 								// top-level is for specific cases (could be handled better), inner switch is for main protocol handling
 								switch(line) {
@@ -248,11 +251,10 @@ public class API {
 							}
 
 							//TODO: this works, but could this cause delays since it updates all the gui's everytime someone sends in a command, even if nothings changed
-							String UIState = View.getStateUI(this.parser);
-							for (Socket guiSocket : gui) {
-								guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
-							}
-							doHTTP(UIState);
+							System.out.println("before http");
+							doHTTP(View.getStateUI(this.parser));
+							System.out.println("after http");
+
 
 							// Echo the message back
 							bytesSent = inBuffer.position(); 
@@ -273,15 +275,11 @@ public class API {
 				parser.tickTimer(deltaTimeMillis);
 				timePassed += deltaTimeMillis;
 
-				if(timePassed > 100) {
+				// if(timePassed > 100) {
 					// update guis...
-					String UIState = View.getStateUI(this.parser);
-					for (Socket guiSocket : gui) {
-						guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap(UIState + "\n"))); //NOTE: why is there a newline here, but not in the <<GUI>> case?
-					}
-					doHTTP(UIState);
+					doHTTP(View.getStateUI(this.parser));
 					timePassed = 0;
-				}
+				// }
 				
 
 			} // end of while (!terminated)
