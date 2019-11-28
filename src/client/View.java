@@ -239,6 +239,26 @@ public class View {
 		String uptime = getFixedLengthString(String.valueOf(serverUptimeMillis), 14);
 		String timer = getFixedLengthString(String.valueOf(timeLeftOnTimerSeconds), 2);
 
+
+		//NOTE: if we increase spectators array size or username max length, we would need to update this UI (i'm assuming a max of 8 spectators here)
+		// online spectators...
+		String spectatorsLine1 = "";
+		String spectatorsLine2 = "";
+		int spectatorsCount = 0;
+		for (User s : parser.spectators) {
+			if (null == s) continue;
+
+			++spectatorsCount;
+			// 4 spectators per line
+			if (spectatorsCount <= 4) {
+				spectatorsLine1 += s.username + ", ";
+			} else {
+				spectatorsLine2 += s.username + ", ";
+			}
+		}
+
+		spectatorsLine1 = getFixedLengthString(spectatorsLine1, 66);
+		spectatorsLine2 = getFixedLengthString(spectatorsLine2, 66);
 		
 		//NOTE: wow, it's ugly...
 		String ui =
@@ -267,7 +287,10 @@ public class View {
         + "|      "+usernames[3]+"      "+usernames[2]+"      "+usernames[1]+"      "+usernames[0]+"      ||;"
         + "|      BAL:"+balances[3]+"      BAL:"+balances[2]+"      BAL:"+balances[1]+"      BAL:"+balances[0]+"      ||;"
         + "|                                                                              ||;"
-        + "|==============================================================================||";
+		+ "|==============================================================================||;"
+		+ "|Spectators: "+spectatorsLine1+"||;"
+		+ "|            "+spectatorsLine2+"||;"
+		+ "|==============================================================================||";
 		
 		return ui;
 	}
