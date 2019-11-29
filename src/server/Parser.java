@@ -502,7 +502,12 @@ public class Parser {
 
 		// safety timeout handling (on timeout, players who haven't bet will be given an auto-bet of the minimum $1 since everyone can always bet this amount regardless of their balance)
 		for (User p : players) {
-			if (null != p && -1 == p.bet) p.bet = 1;
+			if (null != p && -1 == p.bet) {
+				p.bet = 1;
+				p.balance -= p.bet;
+				// safety (special case is when balance has now gone down to 0, so to prevent deadlocks, we give them $1)
+				if (p.balance == 0) p.balance = 1;
+			}
 		}
 
 		// INIT PLAYER_TURNS WINDOW...
