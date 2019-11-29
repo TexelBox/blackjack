@@ -186,9 +186,11 @@ public class API {
 							
 							System.out.print("TCP Client: " + line + "\n");
 
-							// AUTH...
-							// special case that im extracting to here
-							if (line.substring(0, 3).equals("/a ")) {
+							// create account...
+							if (line.substring(0, 3).equals("/c ")) {
+								if (this.parser.createAccount(line.substring(3))) cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n")));
+								else cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
+							} else if (line.substring(0, 3).equals("/a ")) { // AUTH... (special case that im extracting to here)
 								if (this.parser.authenticate(line.substring(3))) {
 									if (this.parser.setUser(line.substring(3)) == -1) cchannel.write(encoder.encode(CharBuffer.wrap("full" + "\n")));
 									else {

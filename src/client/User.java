@@ -47,6 +47,70 @@ public class User {
 				return;
 			}
 
+			// loop until user selects 1 for LOGIN or 2 for CREATE ACCOUNT
+			boolean invalidChoice = true;
+			boolean createAccount = false;
+			System.out.println(View.UI_LOGIN_OR_CREATE_ACCOUNT);
+			while (invalidChoice) {
+				System.out.print(View.UI_ENTER_CHOICE);
+				String choice = scan.nextLine().trim();
+				if (choice.equals("1")) {
+					createAccount = false;
+					invalidChoice = false;
+				} else if (choice.equals("2")) {
+					createAccount = true;
+					invalidChoice = false;
+				} else {
+					System.out.println("INVALID CHOICE!");
+					System.out.println(View.UI_LOGIN_OR_CREATE_ACCOUNT);
+				}
+			}
+
+			if (createAccount) {
+				System.out.println(View.UI_CREATE_ACCOUNT);
+				boolean invalidLine = true;
+				while(invalidLine) {
+					// username...
+					System.out.print(View.UI_ENTER_USERNAME);
+					String arg1 = scan.nextLine();
+	
+					//NOTE: this implicitly error checks for the delimiter ';'
+					if (!isValidUsernameStr(arg1)) {
+						System.out.print(View.UI_USERNAME_STR_ERROR);
+						continue;
+					}
+	
+					// password...
+					System.out.print(View.UI_ENTER_PASSWORD);
+					String arg2 = scan.nextLine();
+	
+					//NOTE: this implicitly error checks for the delimiter ';'
+					if (!isValidPasswordStr(arg2)) {
+						System.out.print(View.UI_PASSWORD_STR_ERROR);
+						continue;
+					}
+
+					// confirm password...
+					System.out.print(View.UI_CONFIRM_PASSWORD);
+					String arg3 = scan.nextLine();
+					if (!arg3.equals(arg2)) {
+						System.out.print(View.UI_CONFIRM_PASSWORD_ERROR);
+						continue;
+					}
+	
+					// credentials are now valid client side, but still must check if valid on server side...
+					// send to server and get validation string back
+					Message m = service.sendAndWait("/c " + arg1+":"+arg2);
+					if (m.ok()) {
+						System.out.println("Account created!");
+						invalidLine = false;
+					} else {
+						System.out.print(View.UI_USERNAME_TAKEN_ERROR);
+					}
+				}
+			}
+
+			System.out.println(View.UI_LOGIN);
 			boolean invalidInput = true;
 			while(invalidInput) {
 				// username...

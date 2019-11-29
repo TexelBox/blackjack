@@ -302,6 +302,70 @@ public class Parser {
 		return false;
 	}
 
+
+	public boolean createAccount(String input) {
+		String[] loginInfo = input.trim().split(":");
+		String username = loginInfo[0];
+		String password = loginInfo[1];
+
+		// check users file...
+		try (BufferedReader br = new BufferedReader(new FileReader("server/users.txt"))) {
+			for (String line; (line = br.readLine()) != null;) {
+				// check over line for matching username...
+				line = line.trim();
+				// make sure its not an empty line or comment line...
+				if (line.isEmpty()) continue;
+				if (line.charAt(0) == '/') continue;
+
+				// expect line to be in valid format USERNAME:PASSWORD:BALANCE
+				String[] parts = line.split(":");
+				if (parts.length != 3) {
+					System.out.println("SERVER WARNING: users file contains invalid line format.");
+					continue;
+				}
+
+				// validate specific formats...
+				String savedUsername = parts[0].trim();
+				String savedPassword = parts[1].trim();
+				String savedBalanceStr = parts[2].trim();
+
+				if (!User.isValidUsernameStr(savedUsername)) {
+					System.out.println("SERVER WARNING: users file contains invalid username.");
+					continue;
+				}
+
+				if (!User.isValidPasswordStr(savedPassword)) {
+					System.out.println("SERVER WARNING: users file contains invalid password.");
+					continue;
+				}
+
+				if (!User.isValidBalanceStr(savedBalanceStr)) {
+					System.out.println("SERVER WARNING: users file contains invalid balance.");
+					continue;
+				}
+
+				// now we can check if credentials match...
+				if (username.equalsIgnoreCase(savedUsername)) return false;
+			}
+		} catch (Exception e) {
+			System.out.println("SERVER ERROR: error on read of users file.");
+			return false;
+		}
+		
+		// get here if our username is unique
+		// now try to append this new user to end of file...
+		try (BufferedWriter bw = new BufferedWriter(new FileWriter("server/users.txt", true))) {
+				bw.write(username+":"+password+":"+"1000"); //NOTE: starting balance of $1000
+				bw.newLine();
+		} catch (Exception e) {
+			System.out.println("SERVER ERROR: error on append to users file. Failure to add new account.");
+			System.exit(1); // should just blow up server here since users file coulb be corrupted
+		}
+
+		return true;
+	}
+
+
 	// Takes in username and password and checks if its correct
 	// format: (username):(password)
 	public boolean authenticate(String input) {

@@ -19,6 +19,7 @@ public class View {
 	public static final String UI_ENTER_USERNAME = "Enter username: ";
 	public static final String UI_ENTER_PASSWORD = "Enter password: ";
 	public static final String UI_CONFIRM_PASSWORD = "Confirm password: ";
+	public static final String UI_CONFIRM_PASSWORD_ERROR = "Passwords do not match.\n";
 	public static final String UI_COMMAND_INFO = 
 											  "COMMON COMMANDS: /t(alk) <msg>, /l(eaderboard)\n"
 											+ "PLAYER COMMANDS: /b(et) <value>, /s(tand), /h(it), /d(ouble)\n"
@@ -31,6 +32,7 @@ public class View {
 	public static final String UI_COMMAND_ERROR = "\n\nPlease enter one of the following commands:\n";
 	public static final String UI_USERNAME_STR_ERROR = "Invalid username string. Must be alpha-numeric and between 1 and 12 characters.\n";
 	public static final String UI_PASSWORD_STR_ERROR = "Invalid password string. Must be alpha-numeric and between 1 and 32 characters.\n";
+	public static final String UI_USERNAME_TAKEN_ERROR = "Username taken. Usernames on server must be unique (case-insensitive).\n";
 
 
 	public static final int NB_CHATBOX_LINES = 24;
