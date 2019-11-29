@@ -1,12 +1,18 @@
 package server;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import client.User;
 //import client.User.UserType;
 
@@ -482,6 +488,57 @@ public class Parser {
 				System.out.println("ERROR: Parser.java - invalid action taken (this should never occur)");
 		}
 	}
+
+	public String getLeaderboard() {
+		String leaderboard = "*LEADERBOARD*: ";
+		
+		Map<String, Integer> mapUsernameToBalance = new HashMap<String, Integer>();
+		// read users file and sort usernames by balance (descending order)
+		// assuming the users file is properly formatted here (no error checking)
+		try (BufferedReader br = new BufferedReader(new FileReader("server/users.txt"))) {
+			for (String line; (line = br.readLine()) != null;) {
+				line = line.trim();
+				// make sure its not an empty line or comment line...
+				if (line.isEmpty()) continue;
+				if (line.charAt(0) == '/') continue;
+
+				// assume line to be in valid format USERNAME:PASSWORD:BALANCE
+				String[] parts = line.split(":");
+
+				String savedUsername = parts[0].trim();
+				String savedPassword = parts[1].trim();
+				String savedBalanceStr = parts[2].trim();
+
+				try {
+					mapUsernameToBalance.put(savedUsername, Integer.parseInt(savedBalanceStr));
+				} catch (Exception e) { // assuming this should never occur
+					e.printStackTrace();
+					return null;
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("SERVER ERROR: error on read of users file. getLeaderboard() failed.");
+			return null;
+		}
+
+		// sort map values (balances)
+		// reference: https://www.geeksforgeeks.org/sorting-a-hashmap-according-to-values/
+		List<Entry<String, Integer>> pairs = new LinkedList<>(mapUsernameToBalance.entrySet());
+		Collections.sort(pairs, new Comparator<Entry<String, Integer>>() {
+			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+				return (o2.getValue()).compareTo(o1.getValue());
+			}
+		});
+
+		int ranking = 0;
+		for (Entry<String, Integer> kv : pairs) {
+			++ranking;
+			leaderboard += ranking+". " + kv.getKey() +":$"+ kv.getValue() + ", ";
+		}
+
+		return leaderboard;
+	}
+
 
 
 	//STATE CHANGERS (TRANSITION EVENTS)...

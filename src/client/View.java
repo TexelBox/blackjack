@@ -20,7 +20,7 @@ public class View {
 	public static final String UI_ENTER_PASSWORD = "Enter password: ";
 	public static final String UI_CONFIRM_PASSWORD = "Confirm password: ";
 	public static final String UI_COMMAND_INFO = 
-											  "COMMON COMMANDS: /t(alk) <msg>\n"
+											  "COMMON COMMANDS: /t(alk) <msg>, /l(eaderboard)\n"
 											+ "PLAYER COMMANDS: /b(et) <value>, /s(tand), /h(it), /d(ouble)\n"
 											+ "SPECTATOR COMMANDS: /j(oin), /q(uit)\n";
 	public static final String UI_ENTER_COMMAND = "Enter command: ";

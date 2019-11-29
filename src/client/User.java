@@ -242,6 +242,19 @@ public class User {
 							//error
 						}
 						break;
+					case "/l":
+						if (1 == parts.length) {
+							// success, send to server
+							Message m = service.sendAndWait("l: :" + username);
+							if (m.ok()) {
+								System.out.println("View current leaderboard in chatbox!");								
+							} else {
+								System.out.println("ERROR");
+							}
+						} else {
+							//error
+						}
+						break;
 					default:
 						// error
 						System.out.print(View.UI_COMMAND_ERROR);

@@ -209,6 +209,18 @@ public class API {
 									guiSocket.getChannel().write(encoder.encode(CharBuffer.wrap("<<TXT>>" + username + ": " + msg + "\n")));
 								}
 								doHTTP("<<TXT>>" + username + ": " + msg + "\n");
+							} else if (line.substring(0, 1).equals("l")) { 
+								//NOTE: no need to validate anything about game state, since any user can issue this command at any time
+								// get the leaderboard string as a chat message from parser...
+								String leaderboard = parser.getLeaderboard();
+								if (null != leaderboard) {
+									System.out.println("OK");
+									cchannel.write(encoder.encode(CharBuffer.wrap("ok" + "\n"))); //NOTE: doing this first to not hang up client
+									doHTTP("<<TXT>>" + leaderboard + "\n");
+								} else {
+									System.out.println("NO");
+									cchannel.write(encoder.encode(CharBuffer.wrap("no" + "\n")));
+								}
 							} else {
 								// top-level is for specific cases (could be handled better), inner switch is for main protocol handling
 								switch(line) {
