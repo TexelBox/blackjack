@@ -18,7 +18,6 @@ import client.User;
 
 public class Parser {
 
-	//TODO: right now state changes are event based, but later on in A4, I want to implement timers to automatically handle this
 	// The state will progress in this order and then loop back around
 	public enum ServerState {
 		JOINING, // start server here, loop back here from dealer turn after ???? (what event to use for now) ????
@@ -28,7 +27,7 @@ public class Parser {
 	}
 
 	protected List<User> players = Arrays.asList(null, null, null, null); // players at the table
-	public List<User> spectators = Arrays.asList(null, null, null, null, null); // spectators (between rounds this needs to be able to hold everyone connected)
+	public List<User> spectators = Arrays.asList(null, null, null, null, null, null, null, null); // spectators (between rounds this needs to be able to hold everyone connected)
 
 	public ServerState serverState = ServerState.JOINING;
 
