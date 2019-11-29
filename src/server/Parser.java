@@ -33,7 +33,7 @@ public class Parser {
 
 	// both times in milliseconds
 	private long serverUptimeMillis = 0;
-	private long timeLeftOnTimerMillis = 10000;
+	private long timeLeftOnTimerMillis = 15000;
 
 	private List<String> disconnectedPlayerUsernames = new ArrayList<String>();
 
@@ -606,7 +606,6 @@ public class Parser {
 
 	//STATE CHANGERS (TRANSITION EVENTS)...
 
-	//TODO: probably won't be handling client crashes (we would have to make sure their User becomes null and doesn't interrupt the state - e.g. if 1 player has joined, the timer can start ticking down, but then they crash, become null and we should stop or reset this timer)
 
 	private void joiningToBetting() {
 		if (ServerState.JOINING != serverState) return;
@@ -614,7 +613,7 @@ public class Parser {
 		// INIT BETTING WINDOW...
 
 		serverState = ServerState.BETTING;
-		timeLeftOnTimerMillis = 10000; //TODO: use constant
+		timeLeftOnTimerMillis = 15000; //TODO: use constant
 	}
 
 	private void bettingToPlayerTurns() {
@@ -657,12 +656,12 @@ public class Parser {
 		User.currentPlayerTurn = "1";
 
 		serverState = ServerState.PLAYER_TURNS;
-		timeLeftOnTimerMillis = 10000; //TODO: use constant
+		timeLeftOnTimerMillis = 15000; //TODO: use constant
 	}
 
 	// still on the same player
 	private void nextSubTurn() {
-		timeLeftOnTimerMillis = 10000; //TODO: use constant
+		timeLeftOnTimerMillis = 15000; //TODO: use constant
 	}
 
 	// move to next player over (or dealer)
@@ -779,7 +778,7 @@ public class Parser {
 		}
 
 		serverState = ServerState.DEALER_TURN;
-		timeLeftOnTimerMillis = 10000; //TODO: use constant
+		timeLeftOnTimerMillis = 15000; //TODO: use constant
 	}
 
 	private void dealerTurnToJoining() {
@@ -875,7 +874,7 @@ public class Parser {
 		Card.resetDeck(); // put cards back into deck
 
 		serverState = ServerState.JOINING;
-		timeLeftOnTimerMillis = 10000; //TODO: use constant
+		timeLeftOnTimerMillis = 15000; //TODO: use constant
 	}
 
 
@@ -886,7 +885,7 @@ public class Parser {
 
 		if (ServerState.JOINING == serverState) {
 			// don't tick down timer if we have no players joined yet...
-			if (getNumConnectedPlayers() == 0) timeLeftOnTimerMillis = 10000; //TODO: use constant (make sure its the dealer->join time)
+			if (getNumConnectedPlayers() == 0) timeLeftOnTimerMillis = 15000; //TODO: use constant (make sure its the dealer->join time)
 		}
 		
 		// timeout occurs!
