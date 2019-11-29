@@ -1,12 +1,7 @@
 package client;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class User {
 
@@ -88,6 +83,7 @@ public class User {
 			}
 
 			// get input
+			System.out.print(View.UI_COMMAND_ERROR);
 			System.out.print(View.UI_COMMAND_INFO);
 			System.out.print(View.UI_ENTER_COMMAND);
 
@@ -111,8 +107,10 @@ public class User {
 
 				nextLine = nextLine.trim();
 				if (nextLine.isEmpty()) {
-					//TODO?: error msg
-					continue; //?
+					System.out.println("ERROR: no command entered!");
+					System.out.print(View.UI_COMMAND_ERROR);
+					System.out.print(View.UI_COMMAND_INFO);
+					continue;
 				}
 
 				String[] parts = nextLine.split("\\s+"); // split by whitespace chars
@@ -123,9 +121,6 @@ public class User {
 				// format: "(cmd):(state):(username)" =:= "(parts[0].charAt(1):parts.length > 1 ? parts[1] : " ":(username)"
 
 				//NOTE: this looks really redundant and I could use fall-through cases here, but i'm leaving it like this so that each case could have different specific error msgs if needed
-				//TODO: more specific error messages!
-				//TODO: make sure /q is handled properly
-				//TODO?: add getLeaderboard command				
 				switch(cmdStr) {
 					case "/q":
 						if (1 == parts.length) {
@@ -135,10 +130,10 @@ public class User {
 								//TODO: any resource closing needed???
 								System.exit(0);
 							} else {
-								System.out.println("ERROR");
+								System.out.println("ERROR: you can't quit if you are a player!");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/j":
@@ -148,10 +143,10 @@ public class User {
 							if (m.ok()) {
 								System.out.println("You have joined the table (wait until betting window opens).");
 							} else {
-								System.out.println("ERROR");
+								System.out.println("ERROR: only spectators can join table during join window if table is not full!");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/b":
@@ -166,16 +161,16 @@ public class User {
 									if (m.ok()) {
 										System.out.println("You have placed your bet on the table (wait until player turns window opens).");
 									} else {
-										System.out.println("ERROR");
+										System.out.println("ERROR: only players can bet during betting window (can't bet twice) and their balance must be able to afford it!");
 									}
 								} else {
-									//error
+									System.out.println("ERROR: entered bet value must be between $1 to $100");
 								}
 							} else {
-								//error
+								System.out.println("ERROR: entered bet value is not a non-negative integer!");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/s":
@@ -185,10 +180,10 @@ public class User {
 							if (m.ok()) {
 								System.out.println("\"I STAND\"");
 							} else {
-								System.out.println("ERROR");
+								System.out.println("ERROR: only players can stand when its their turn!");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/h":
@@ -198,10 +193,10 @@ public class User {
 							if (m.ok()) {
 								System.out.println("\"HIT ME!\"");
 							} else {
-								System.out.println("ERROR");
+								System.out.println("ERROR: only players can hit when its their turn!");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/d":
@@ -211,10 +206,10 @@ public class User {
 							if (m.ok()) {
 								System.out.println("\"DOUBLE-DOWN!\"");
 							} else {
-								System.out.println("ERROR");
+								System.out.println("ERROR: only players can double-down when its their turn, on their first 2 cards if their balance can afford it!");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/t":
@@ -236,10 +231,10 @@ public class User {
 								Message m = service.sendAndWait("t:" + msg + ":" + username);
 								// this should always get "ok" back, so do nothing
 							} else {
-								//error
+								System.out.println("ERROR: chat messages must be alpha-numeric (other than spaces in between words)");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					case "/l":
@@ -249,14 +244,14 @@ public class User {
 							if (m.ok()) {
 								System.out.println("View current leaderboard in chatbox!");								
 							} else {
-								System.out.println("ERROR");
+								System.out.println("ERROR: server failed to read users file correctly");
 							}
 						} else {
-							//error
+							System.out.println("ERROR: wrong number of command arguments!");
 						}
 						break;
 					default:
-						// error
+						// error (unrecognized command)
 						System.out.print(View.UI_COMMAND_ERROR);
 						System.out.print(View.UI_COMMAND_INFO);
 				}
